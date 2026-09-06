@@ -367,6 +367,9 @@ function ajouter(rel: number, q: Qualite): void {
   }
   etat.grille.push({ rel, q });
   rendreGrilleEtSuite();
+  // On entend ce qu'on vient de poser, une fois. Pas pendant une lecture :
+  // l'accord y passera de toute façon, et deux sons superposés brouillent tout.
+  if (!lecteur.enLecture) lecteur.essayer(notesMidi(etat.tonalite, { rel, q }));
 }
 
 function changerMode(mode: Mode): void {
