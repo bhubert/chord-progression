@@ -5,8 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Le projet en deux phrases
 
 Site d'une seule page pour trouver des progressions d'accords à la guitare :
-tonalité, grille cliquable, écoute Web Audio, diagrammes de positions, capo,
-progressions classiques, lien qui décrit la grille. Astro statique, hébergé
+tonalité, grille cliquable, écoute Web Audio avec rythmiques, diagrammes de
+positions, capo, formes CAGED sur le manche, progressions classiques, lien qui
+décrit la grille. Astro statique, hébergé
 sur Cloudflare Pages (`grille-accords`), déployé par GitHub Actions depuis
 `bhubert/chord-progression`, site <https://grille-accords.pages.dev>.
 
@@ -60,12 +61,19 @@ et la grille sont relus à chaque croche ; « Arrêter » ferme le nœud `voix` 
 30 ms. Ne pas revenir à un tour programmé d'un coup : c'est ce qui faisait
 que le bouton d'arrêt n'arrêtait rien et que les tempos se superposaient.
 
+### Une forme CAGED se pose par sa première racine
+
+`caged.ts` décrit chaque forme par sa corde d'ancrage et des décalages depuis
+la case de cette racine (négatifs pour les formes de Do et de Sol). `placer`
+trouve la case, une octave plus haut si la forme passerait sous le sillet.
+Rien de tout ça ne dépend de la tonalité autrement que par la racine.
+
 ### Les modules de `src/data/` tournent sous Node sans compilation
 
 `node --test` exécute les `.ts` directement (Node 24 retire les types). D'où
 deux contraintes : imports avec extension `.ts` (`allowImportingTsExtensions`
 dans `tsconfig.json`), et aucun accès au DOM dans `theorie.ts`, `positions.ts`,
-`progressions.ts`, `rythmiques.ts`, `rendu.ts`.
+`progressions.ts`, `rythmiques.ts`, `caged.ts`, `rendu.ts`.
 
 ## Pièges qui échouent en silence
 

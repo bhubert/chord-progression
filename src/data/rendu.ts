@@ -29,6 +29,16 @@ import { meilleurCapo, svgDiagramme } from './positions.ts';
 import { AMBIANCES, PROGRESSIONS, SUITES, type Ambiance } from './progressions.ts';
 import { GAMMES, PREF } from './theorie.ts';
 import { RYTHMIQUES, RYTHMIQUE_DEFAUT, rythmique as rythmiqueParId } from './rythmiques.ts';
+import {
+  FORMES,
+  NOMS_FORMES,
+  descriptionAncre,
+  forme,
+  placer,
+  svgManche,
+  type Lettre,
+  type Placement,
+} from './caged.ts';
 
 export type Filtre = Ambiance | 'toutes';
 
@@ -39,6 +49,8 @@ export interface Etat {
   filtre: Filtre;
   /** Id d'une entrée de `RYTHMIQUES`. */
   rythmique: string;
+  /** Le manche : l'accord regardé (sinon le premier de la grille) et la forme posée (sinon les racines). */
+  manche: { accord: Accord | null; forme: Lettre | null };
 }
 
 export const MAX_MESURES = 16;
@@ -51,6 +63,7 @@ export const etatInitial = (): Etat => ({
   boucle: true,
   filtre: 'toutes',
   rythmique: RYTHMIQUE_DEFAUT,
+  manche: { accord: null, forme: null },
 });
 
 const majuscule = (s: string) => s[0]!.toUpperCase() + s.slice(1);
@@ -226,3 +239,51 @@ const AFFICHAGE_JETON: Record<string, string> = {
 /** Le motif en flèches : ↓ · ↓ ↑ · ↑ ↓ ↑ */
 export const htmlMotif = (id: string): string =>
   [...rythmiqueParId(id).motif].map((j) => AFFICHAGE_JETON[j] ?? j).join(' ');
+
+// ── Le manche ──────────────────────────────────────────────────────────────
+
+/** L'accord regardé sur le manche : celui choisi s'il est encore dans la grille, sinon le premier, sinon la tonique. */
+export function accordManche(etat: Etat): Accord {
+  const candidats = uniques(etat.grille);
+  const choisi = etat.manche.accord;
+  if (choisi && candidats.some((a) => a.rel === choisi.rel && a.q === choisi.q)) return choisi;
+  return candidats[0] ?? { rel: 0, q: etat.tonalite.mode === 'maj' ? 'maj' : 'min' };
+}
+
+/** La forme posée, si elle existe pour cet accord. */
+export function placementManche(etat: Etat): Placement | null {
+  const a = accordManche(etat);
+  const f = etat.manche.forme ? forme(a.q, etat.manche.forme) : null;
+  return f ? placer(etat.tonalite, a, f) : null;
+}
+
+export function htmlManche(etat: Etat): string {
+  const t = etat.tonalite;
+  const a = accordManche(etat);
+  const p = placementManche(etat);
+  const choix = uniques(etat.grille)
+    .map(
+      (c) =>
+        `<button type="button" class="choix" data-manche-rel="${c.rel}" data-manche-q="${c.q}" aria-pressed="${c.rel === a.rel && c.q === a.q}">${htmlAccord(t, c)}</button>`,
+    )
+    .join('');
+  const formes = FORMES[a.q]
+    .map((f) => {
+      const pl = placer(t, a, f);
+      return `<button type="button" class="forme" data-forme="${f.lettre}" aria-pressed="${p?.forme.lettre === f.lettre}"><span class="lettre">${f.lettre}</span><span class="ou">${NOMS_FORMES[f.lettre]}<br>${descriptionAncre(pl)}</span></button>`;
+    })
+    .join('');
+  const toutes = `<button type="button" class="forme" data-forme="racines" aria-pressed="${p === null}"><span class="lettre">●</span><span class="ou">Toutes les racines<br>de ${nomAccord(t, a)} sur le manche</span></button>`;
+  let phrase: string;
+  if (p) {
+    phrase = `<b>${NOMS_FORMES[p.forme.lettre][0]!.toUpperCase()}${NOMS_FORMES[p.forme.lettre].slice(1)} pour ${nomAccord(t, a)}</b> : posez la première racine sur la ${descriptionAncre(p)}, le reste de la forme suit. Sur le manche, l’anneau la marque, et les points dorés sont les autres racines.`;
+  } else if (a.q === 'dim') {
+    phrase = `Pas de forme CAGED pour un accord diminué : voici les racines de <b>${nomAccord(t, a)}</b>, c’est déjà ce qu’il faut pour le trouver.`;
+  } else {
+    phrase = `Les racines de <b>${nomAccord(t, a)}</b> sur tout le manche. Choisissez une forme pour voir où la poser${a.q === 'min' ? '. En mineur, trois formes suffisent : Mi, La et Ré' : ''}.`;
+  }
+  return `<div class="manche-choix" role="group" aria-label="Accord regardé">${choix}</div>
+<div class="manche-defile">${svgManche(t, a, p)}</div>
+<div class="formes" role="group" aria-label="Forme">${toutes}${formes}</div>
+<p class="manche-phrase">${phrase}</p>`;
+}

@@ -37,6 +37,7 @@ import {
 import { notesMidi } from '../data/positions.ts';
 import { PROGRESSIONS } from '../data/progressions.ts';
 import { dureesCroches, rythmique as rythmiqueParId } from '../data/rythmiques.ts';
+import { notesPlacement, type Lettre } from '../data/caged.ts';
 import {
   MAX_MESURES,
   etatInitial,
@@ -46,12 +47,14 @@ import {
   htmlDiatoniques,
   htmlFiltres,
   htmlGrille,
+  htmlManche,
   htmlMotif,
   htmlOptionsRythmique,
   htmlOptionsTonique,
   htmlPositions,
   htmlProgressions,
   htmlTitreTonalite,
+  placementManche,
   type Etat,
   type Filtre,
 } from '../data/rendu.ts';
@@ -100,6 +103,10 @@ function rendreProgressions(): void {
   $('#progressions').innerHTML = htmlProgressions(etat);
 }
 
+function rendreManche(): void {
+  $('#manche').innerHTML = htmlManche(etat);
+}
+
 function rendreRythmique(): void {
   $('#rythmique').innerHTML = htmlOptionsRythmique(etat);
   $('#motif').innerHTML = htmlMotif(etat.rythmique);
@@ -115,6 +122,7 @@ function rendreGrilleEtSuite(): void {
   rendreGrille();
   rendreTonalite();
   rendrePositions();
+  rendreManche();
   ecrireAdresse();
 }
 
@@ -124,6 +132,7 @@ function toutRendre(): void {
   rendreGrille();
   rendreTonalite();
   rendrePositions();
+  rendreManche();
   rendreProgressions();
   rendreRythmique();
   ecrireAdresse();
@@ -161,7 +170,7 @@ class Lecteur {
   mesureCourante = -1;
   enLecture = false;
 
-  private pincer(f: number, t: number, velocite: number): void {
+  private pincer(f: number, t: number, velocite: number, destination: AudioNode): void {
     const ctx = this.ctx!;
     const o = ctx.createOscillator();
     o.type = 'triangle';
@@ -185,7 +194,7 @@ class Lecteur {
     o2.connect(g2);
     g2.connect(filtre);
     filtre.connect(g);
-    g.connect(this.voix!);
+    g.connect(destination);
     o.start(t);
     o2.start(t);
     o.stop(t + 1.8);
@@ -193,9 +202,40 @@ class Lecteur {
   }
 
   /** Un battement : vers le bas sur toutes les cordes, vers le haut sur les quatre aiguës. */
-  private battre(notes: number[], t: number, velocite: number, vers: 'bas' | 'haut'): void {
+  private battre(
+    notes: number[],
+    t: number,
+    velocite: number,
+    vers: 'bas' | 'haut',
+    destination: AudioNode = this.voix!,
+  ): void {
     const cordes = vers === 'haut' ? notes.slice(-4).reverse() : notes;
-    cordes.forEach((n, i) => this.pincer(frequence(n), t + i * 0.024, velocite));
+    cordes.forEach((n, i) => this.pincer(frequence(n), t + i * 0.024, velocite, destination));
+  }
+
+  /** Crée le contexte audio au premier geste, jamais avant : les navigateurs l'exigent. */
+  private preparer(): AudioContext {
+    if (!this.ctx) {
+      this.ctx = new AudioContext();
+      const compresseur = this.ctx.createDynamicsCompressor();
+      compresseur.threshold.value = -18;
+      compresseur.ratio.value = 4;
+      this.sortie = this.ctx.createGain();
+      this.sortie.gain.value = 0.7;
+      this.sortie.connect(compresseur);
+      compresseur.connect(this.ctx.destination);
+    }
+    void this.ctx.resume();
+    return this.ctx;
+  }
+
+  /** Un seul battement, pour entendre une forme posée sur le manche. Ne dérange pas une lecture en cours. */
+  essayer(notes: number[]): void {
+    const ctx = this.preparer();
+    const voix = ctx.createGain();
+    voix.connect(this.sortie!);
+    this.battre(notes, ctx.currentTime + 0.02, 0.9, 'bas', voix);
+    window.setTimeout(() => voix.disconnect(), 2500);
   }
 
   private dans(t: number): number {
@@ -213,10 +253,10 @@ class Lecteur {
     if (jeton === 'B') this.battre(notes, t, 1, 'bas');
     else if (jeton === 'b') this.battre(notes, t, 0.6, 'bas');
     else if (jeton === 'H') this.battre(notes, t, 0.5, 'haut');
-    else if (jeton === 'p') this.pincer(frequence(notes[0]!), t, 0.9);
+    else if (jeton === 'p') this.pincer(frequence(notes[0]!), t, 0.9, this.voix!);
     else if (jeton in DEPUIS_AIGU) {
       const n = notes[Math.max(0, notes.length - 1 - DEPUIS_AIGU[jeton]!)]!;
-      this.pincer(frequence(n), t, 0.7);
+      this.pincer(frequence(n), t, 0.7, this.voix!);
     }
     if (croche === 0) {
       this.surlignages.push(
@@ -267,22 +307,12 @@ class Lecteur {
       toast('Ajoutez d’abord un accord à la grille.');
       return;
     }
-    if (!this.ctx) {
-      this.ctx = new AudioContext();
-      const compresseur = this.ctx.createDynamicsCompressor();
-      compresseur.threshold.value = -18;
-      compresseur.ratio.value = 4;
-      this.sortie = this.ctx.createGain();
-      this.sortie.gain.value = 0.7;
-      this.sortie.connect(compresseur);
-      compresseur.connect(this.ctx.destination);
-    }
-    void this.ctx.resume();
-    this.voix = this.ctx.createGain();
+    const ctx = this.preparer();
+    this.voix = ctx.createGain();
     this.voix.connect(this.sortie!);
     this.enLecture = true;
     this.position = 0;
-    this.prochainTemps = this.ctx.currentTime + 0.05;
+    this.prochainTemps = ctx.currentTime + 0.05;
     this.mesureCourante = -1;
     $('#jouer').innerHTML = ICONE_ARRET;
     this.tourner();
@@ -389,6 +419,23 @@ document.addEventListener('click', (e) => {
   }
   const progression = cible.closest<HTMLElement>('.progression');
   if (progression) chargerProgression(Number(progression.dataset.progression));
+  const choix = cible.closest<HTMLElement>('.choix');
+  if (choix) {
+    etat.manche.accord = {
+      rel: Number(choix.dataset.mancheRel),
+      q: choix.dataset.mancheQ as Qualite,
+    };
+    rendreManche();
+  }
+  const formeChoisie = cible.closest<HTMLElement>('.forme');
+  if (formeChoisie) {
+    const lettre = formeChoisie.dataset.forme;
+    etat.manche.forme = lettre === 'racines' ? null : (lettre as Lettre);
+    rendreManche();
+    // On l'entend en la posant : un battement, sans toucher à la lecture en cours.
+    const p = placementManche(etat);
+    if (p) lecteur.essayer(notesPlacement(p));
+  }
 });
 
 $('#jouer').addEventListener('click', () =>

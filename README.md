@@ -24,6 +24,11 @@ Site : <https://grille-accords.pages.dev>
 - **Les progressions à essayer.** Quinze classiques, dont trois blues en douze
   mesures, filtrables par ambiance, transposées dans la tonalité choisie, avec
   deux ou trois titres connus pour situer le son. Un blues charge le shuffle.
+- **Le manche.** Pour un accord de la grille, toutes ses racines sur quinze
+  cases, et les cinq formes du CAGED (Do, La, Sol, Mi, Ré) avec, pour chacune,
+  la corde et la case où poser la première racine. Cliquer une forme la dessine
+  sur le manche, cercle cette première racine et la fait sonner. En mineur,
+  trois formes ; pour un diminué, les racines seulement.
 - **Les septièmes.** Sous les accords de la tonalité, les trois septièmes de
   dominante du blues (I7, IV7, V7), avec leurs doigtés ouverts.
 - **Le lien.** L'adresse décrit la grille en clair, `#sol-majeur/I-V-vi-IV` :
@@ -54,6 +59,7 @@ src/data/theorie.ts       notes, gammes, chiffrage, adresse (pur, testé)
 src/data/positions.ts     doigtés, diagrammes SVG, capo (pur, testé)
 src/data/progressions.ts  les progressions et les enchaînements fréquents
 src/data/rythmiques.ts    les motifs de battement, huit croches par mesure
+src/data/caged.ts         les cinq formes, leur placement, le dessin du manche (pur, testé)
 src/data/rendu.ts         le HTML, partagé entre le build et le navigateur
 src/scripts/site.ts       l'état, les clics, le son, l'adresse
 src/pages/index.astro     la page, rendue au build dans l'état par défaut
