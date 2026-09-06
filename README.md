@@ -132,12 +132,14 @@ request vers `main` (contrôles sans déploiement).
 
 ## Choix de conception
 
-- **Un seul thème, sombre, forcé.** Palissandre, ivoire, laiton, une lueur
-  ambrée. La couleur dit toujours quelque chose : la qualité d'un accord
-  (mineur bleu, diminué mauve, septième orange, jusqu'au liseré de chaque
-  mesure), l'ambiance d'une progression (filtres et étiquettes), la forme
-  CAGED. Un thème clair « érable » reste possible en redéfinissant les
-  variables de `global.css`.
+- **Deux thèmes, le clair par défaut.** « Érable », papier chaud presque
+  blanc et encre brune, pour que les couleurs ressortent ; « palissandre »,
+  bois sombre et ivoire, par le bouton de l'en-tête, mémorisé dans le
+  navigateur. Le réglage du système n'est pas suivi : le clair s'affiche
+  toujours en premier. La couleur dit toujours quelque chose : la qualité
+  d'un accord (mineur bleu, diminué mauve, septième orange, jusqu'au liseré
+  de chaque mesure), l'ambiance d'une progression (filtres et étiquettes),
+  la forme CAGED.
 - **Une couleur par forme CAGED**, la même partout : boutons du manche, forme
   dessinée, badge sur les diagrammes de positions. C rouge, A jaune, G vert,
   E bleu, D violet, l'arc-en-ciel dans l'ordre des formes. Il n'existe pas de

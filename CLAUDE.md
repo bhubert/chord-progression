@@ -103,13 +103,17 @@ dans `tsconfig.json`), et aucun accès au DOM dans `theorie.ts`, `positions.ts`,
 
 ## Décisions à ne pas défaire sans raison
 
-- **Un seul thème, sombre, forcé.** Palissandre, ivoire, laiton, lueur
-  ambrée ; mineur bleu, diminué mauve, septième orange. Choisi contre les
-  concurrents, tous gris, bleus ou blancs. Un thème clair « érable » se ferait
-  en redéfinissant les variables de `global.css`, pas en ajoutant des couleurs
-  en dur. La teinte locale passe par `--teinte` (qualité, ambiance) et
-  `--caged` (forme) : une règle `color-mix` par usage, jamais une couleur par
-  élément.
+- **Deux thèmes, le clair par défaut.** « Érable » (papier, encre brune) en
+  arrivant, quel que soit le système ; « palissandre » (bois sombre, ivoire)
+  par le bouton de l'en-tête, mémorisé en `localStorage`. L'utilisateur
+  trouvait le sombre triste et voulait du blanc pour que les couleurs
+  ressortent. Chaque thème est un bloc de variables dans `global.css`, `:root`
+  puis `:root[data-theme='dark']` ; aucune règle ne porte de couleur en dur.
+  La teinte locale passe par `--teinte` (qualité, ambiance) et `--caged`
+  (forme) : une règle `color-mix` par usage, jamais une couleur par élément.
+  L'encre sur fond coloré est `--sur-couleur`, sombre dans les deux thèmes.
+  Le script pose `sans-transition` sur `<html>` le temps du changement, sinon
+  les fonds `color-mix` glissent visiblement d'un thème à l'autre.
 - **Une couleur par forme CAGED**, cinq variables `--caged-*`. C rouge, A
   jaune, G vert, E bleu, D violet : un choix, pas une norme (FaChords alterne
   rouge et bleu, Triads & CAGED met C en bleu). Tout passe par ces variables,

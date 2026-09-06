@@ -1,22 +1,66 @@
 /*
- * Un seul thème, « palissandre » : fond bois sombre, texte ivoire, laiton pour
- * ce qui se clique ou qui joue. La couleur dit toujours quelque chose : la
- * qualité d'un accord (mineur bleu, diminué mauve, septième orange), la forme
- * CAGED (une couleur par lettre), l'ambiance d'une progression.
+ * Deux thèmes, le clair par défaut.
+ *
+ * « Érable » : papier chaud presque blanc, encre brune, laiton. C'est celui
+ * qu'on voit en arrivant, quel que soit le réglage du système. « Palissandre »
+ * se choisit par le bouton de l'en-tête et reste mémorisé dans le navigateur.
+ *
+ * Tout passe par les variables ci-dessous ; aucune règle ne porte de couleur
+ * en dur. La couleur dit toujours quelque chose : la qualité d'un accord
+ * (mineur bleu, diminué mauve, septième orange), la forme CAGED (une couleur
+ * par lettre), l'ambiance d'une progression.
  *
  * Le code couleur CAGED suit l'arc-en-ciel dans l'ordre des formes : C rouge,
  * A jaune, G vert, E bleu, D violet. Il n'existe pas de norme ; pour en
- * adopter une autre, changer les cinq variables `--caged-*`, rien d'autre.
- *
- * Pas de bloc `prefers-color-scheme` : c'est un choix, le site s'affiche
- * pareil partout. Un thème clair « érable » reste possible plus tard, en
- * redéfinissant uniquement les variables ci-dessous.
+ * adopter une autre, changer les cinq variables `--caged-*` dans chaque thème.
  */
 
 :root {
+  --bois: #faf7f1;
+  --bois-2: #ffffff;
+  --bois-3: #f0e9de;
+  --touche: #f5ecda;
+  --frette: #e3dacb;
+  --frette-2: #c0b3a1;
+  --ivoire: #22180f;
+  --ivoire-2: #5d5145;
+  --ivoire-3: #8f8273;
+  --laiton: #e39a12;
+  --laiton-2: #f5b73a;
+  --mineur: #1c8ad6;
+  --dim: #a34fc4;
+  --septieme: #e2661a;
+  --caged-c: #e53e3e;
+  --caged-a: #e7ac00;
+  --caged-g: #22a35e;
+  --caged-e: #2a72e5;
+  --caged-d: #8a48dd;
+  --amb-pop: #dc3d7c;
+  --amb-lumineux: #d29a00;
+  --amb-melancolique: #2b8fd6;
+  --amb-rock: #e04545;
+  --amb-folk: #22a35e;
+  --amb-jazz: #8a48dd;
+  --amb-retro: #e08a1e;
+  --amb-sombre: #6b7590;
+  --amb-blues: #4a63e0;
+  /* L'encre sur un fond coloré (bouton d'écoute, badge, filtre actif) : sombre dans les deux thèmes. */
+  --sur-couleur: #1f1712;
+  --lueur-1: rgba(255, 176, 60, 0.22);
+  --lueur-2: rgba(255, 110, 140, 0.12);
+  --ombre-laiton: rgba(227, 154, 18, 0.3);
+  /* Teinte locale : posée par la qualité d'un accord, une ambiance ou une forme. */
+  --teinte: var(--ivoire);
+  --police-titre: 'Gloock', Georgia, 'Times New Roman', serif;
+  --police-ui: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --police-accord: 'Barlow Semi Condensed', 'Arial Narrow', Arial, sans-serif;
+}
+
+:root[data-theme='dark'] {
   --bois: #211712;
   --bois-2: #2c1e18;
   --bois-3: #3a2920;
+  --touche: #2c1e18;
   --frette: #57453a;
   --frette-2: #7e6756;
   --ivoire: #f8eedb;
@@ -32,16 +76,26 @@
   --caged-g: #5fd39a;
   --caged-e: #5aaeff;
   --caged-d: #c58bff;
-  /* Teinte locale : posée par la qualité d'un accord, une ambiance ou une forme. */
-  --teinte: var(--ivoire);
-  --police-titre: 'Gloock', Georgia, 'Times New Roman', serif;
-  --police-ui: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --police-accord: 'Barlow Semi Condensed', 'Arial Narrow', Arial, sans-serif;
+  --amb-pop: #ff6fae;
+  --amb-lumineux: #ffd23f;
+  --amb-melancolique: #7fc9f0;
+  --amb-rock: #ff6b6b;
+  --amb-folk: #5fd39a;
+  --amb-jazz: #c58bff;
+  --amb-retro: #ffb347;
+  --amb-sombre: #a3aecb;
+  --amb-blues: #6d8cff;
+  --lueur-1: rgba(255, 172, 72, 0.16);
+  --lueur-2: rgba(255, 96, 118, 0.09);
+  --ombre-laiton: rgba(245, 185, 66, 0.28);
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
   background: var(--bois);
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
 }
 * {
   box-sizing: border-box;
@@ -52,8 +106,8 @@ body {
   /* Une lueur ambrée en haut à gauche, un fond de bordeaux en bas à droite :
      le bois vernis d'un instrument sous une lampe, pas un aplat. */
   background-image:
-    radial-gradient(ellipse 70% 45% at 12% -5%, rgba(255, 172, 72, 0.16) 0%, transparent 65%),
-    radial-gradient(ellipse 55% 45% at 100% 100%, rgba(255, 96, 118, 0.09) 0%, transparent 60%);
+    radial-gradient(ellipse 70% 45% at 12% -5%, var(--lueur-1) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 45% at 100% 100%, var(--lueur-2) 0%, transparent 60%);
   color: var(--ivoire);
   font: 15px/1.5 var(--police-ui);
   -webkit-font-smoothing: antialiased;
@@ -121,7 +175,7 @@ a {
   appearance: none;
   -webkit-appearance: none;
   background: var(--bois-2)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23b8a992' stroke-width='1.6'/%3E%3C/svg%3E")
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%238f8273' stroke-width='1.6'/%3E%3C/svg%3E")
     no-repeat right 10px center;
   border: 1px solid var(--frette-2);
   border-radius: 4px;
@@ -354,10 +408,10 @@ a {
 .btn-principal {
   background: linear-gradient(180deg, var(--laiton-2), var(--laiton));
   border-color: var(--laiton);
-  color: var(--bois);
+  color: var(--sur-couleur);
   font-weight: 600;
   padding: 9px 18px;
-  box-shadow: 0 4px 18px rgba(245, 185, 66, 0.28);
+  box-shadow: 0 4px 18px var(--ombre-laiton);
 }
 .btn-principal:hover {
   background: var(--laiton-2);
@@ -530,7 +584,7 @@ a {
   top: 2px;
   right: 0;
   font: 700 12px/1 var(--police-accord);
-  color: var(--bois);
+  color: var(--sur-couleur);
   background: var(--caged, var(--ivoire));
   border-radius: 4px;
   padding: 3px 5px 2px;
@@ -703,31 +757,31 @@ a {
 }
 /* Chaque ambiance a sa teinte, reprise par le filtre et par l'étiquette. */
 [data-ambiance='pop'] {
-  --teinte: #ff6fae;
+  --teinte: var(--amb-pop);
 }
 [data-ambiance='lumineux'] {
-  --teinte: #ffd23f;
+  --teinte: var(--amb-lumineux);
 }
 [data-ambiance='mélancolique'] {
-  --teinte: #7fc9f0;
+  --teinte: var(--amb-melancolique);
 }
 [data-ambiance='rock'] {
-  --teinte: #ff6b6b;
+  --teinte: var(--amb-rock);
 }
 [data-ambiance='folk'] {
-  --teinte: #5fd39a;
+  --teinte: var(--amb-folk);
 }
 [data-ambiance='jazz'] {
-  --teinte: #c58bff;
+  --teinte: var(--amb-jazz);
 }
 [data-ambiance='rétro'] {
-  --teinte: #ffb347;
+  --teinte: var(--amb-retro);
 }
 [data-ambiance='sombre'] {
-  --teinte: #a3aecb;
+  --teinte: var(--amb-sombre);
 }
 [data-ambiance='blues'] {
-  --teinte: #6d8cff;
+  --teinte: var(--amb-blues);
 }
 [data-ambiance='mineur'] {
   --teinte: var(--mineur);
@@ -752,6 +806,11 @@ a {
   background: var(--teinte);
   color: var(--bois);
   border-color: var(--teinte);
+}
+/* Sur une ambiance colorée, l'encre sombre passe dans les deux thèmes ;
+   « Toutes » est à l'encre du texte, donc son libellé prend la couleur du fond. */
+.filtre[data-ambiance][aria-pressed='true'] {
+  color: var(--sur-couleur);
 }
 .liste-progressions {
   margin-top: 18px;
@@ -884,6 +943,12 @@ a {
   .transport {
     padding: 0;
   }
+}
+/* Posée par le script le temps d'un changement de thème. */
+.sans-transition *,
+.sans-transition *::before,
+.sans-transition *::after {
+  transition: none !important;
 }
 @media (prefers-reduced-motion: reduce) {
   * {

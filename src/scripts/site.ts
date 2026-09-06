@@ -481,6 +481,45 @@ $('#partager').addEventListener('click', async () => {
   }
 });
 
+// ── Thème ──────────────────────────────────────────────────────────────────
+//
+// Clair par défaut, quel que soit le réglage du système ; le sombre se choisit
+// et reste mémorisé. Le script est externe (CSP), donc un lecteur en sombre
+// voit le clair un instant au chargement : c'est le prix d'un site sans script
+// en ligne, et il est faible.
+
+const CLE_THEME = 'theme';
+
+function appliquerTheme(sombre: boolean): void {
+  // Sans les transitions le temps du changement : sinon chaque fond teinté
+  // glisse d'une couleur à l'autre pendant une bonne seconde, et la page a
+  // l'air délavée entre les deux thèmes.
+  const racine = document.documentElement;
+  racine.classList.add('sans-transition');
+  if (sombre) racine.dataset.theme = 'dark';
+  else delete racine.dataset.theme;
+  window.setTimeout(() => racine.classList.remove('sans-transition'), 250);
+  const bouton = $('#theme');
+  bouton.textContent = sombre ? 'Mode clair' : 'Mode sombre';
+  bouton.setAttribute('aria-pressed', String(sombre));
+}
+
+try {
+  appliquerTheme(localStorage.getItem(CLE_THEME) === 'dark');
+} catch {
+  appliquerTheme(false);
+}
+
+$('#theme').addEventListener('click', () => {
+  const sombre = document.documentElement.dataset.theme !== 'dark';
+  appliquerTheme(sombre);
+  try {
+    localStorage.setItem(CLE_THEME, sombre ? 'dark' : 'light');
+  } catch {
+    // Navigation privée ou stockage refusé : le choix vaut pour la page, pas plus.
+  }
+});
+
 // ── Départ ─────────────────────────────────────────────────────────────────
 
 const depuisAdresse = lireAdresse(location.hash);

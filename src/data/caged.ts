@@ -255,7 +255,7 @@ export function svgManche(
   const haut = y(5) - 11;
   const bas = y(0) + 11;
   let s = `<svg viewBox="0 0 ${largeur} ${hauteur}" role="img" aria-label="Le manche pour ${nom}">`;
-  s += `<rect x="${X0}" y="${haut}" width="${FRETTES_MANCHE * PAS}" height="${bas - haut}" fill="var(--bois-2)"/>`;
+  s += `<rect x="${X0}" y="${haut}" width="${FRETTES_MANCHE * PAS}" height="${bas - haut}" fill="var(--touche)"/>`;
   // Repères de touche, en nacre discrète : un point, deux à la douzième.
   for (const f of REPERES) {
     const x = xCase(f);
@@ -286,7 +286,7 @@ export function svgManche(
   if (!p) {
     for (const [corde, f] of racines(t, a)) {
       s += `<circle cx="${xCase(f)}" cy="${y(corde)}" r="9" fill="var(--laiton)"/>`;
-      s += `<text x="${xCase(f)}" y="${y(corde) + 3.5}" font-size="10" font-weight="600" fill="var(--bois)" text-anchor="middle">${nom}</text>`;
+      s += `<text x="${xCase(f)}" y="${y(corde) + 3.5}" font-size="10" font-weight="600" fill="var(--sur-couleur)" text-anchor="middle">${nom}</text>`;
     }
   } else {
     p.frettes.forEach((f, corde) => {
