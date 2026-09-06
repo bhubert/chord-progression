@@ -6,6 +6,7 @@ import {
   boitePenta,
   descriptionAncre,
   forme,
+  lettreCaged,
   nomsPenta,
   notesPenta,
   notesPlacement,
@@ -114,13 +115,13 @@ test('les racines couvrent chaque corde au moins une fois jusqu’à la quinziè
 test('le dessin nomme les racines sans forme, et cercle la première avec une forme', () => {
   const sans = svgManche(SOL, { rel: 0, q: 'maj' }, null);
   assert.match(sans, />G<\/text>/);
-  assert.doesNotMatch(sans, /r="13"/);
+  assert.doesNotMatch(sans, /r="13.5"/);
   const avec = svgManche(
     SOL,
     { rel: 0, q: 'maj' },
     placer(SOL, { rel: 0, q: 'maj' }, forme('maj', 'E')!),
   );
-  assert.match(avec, /r="13"/);
+  assert.match(avec, /r="13.5"/);
 });
 
 test('la pentatonique majeure de Sol a les notes de la mineure de Mi, et couvre le manche', () => {
@@ -214,4 +215,22 @@ test('avec une forme, la pentatonique se limite à sa boîte : deux notes par co
   const points = (svg: string) =>
     (svg.match(/stroke="var\(--ivoire-3\)" stroke-width="1"\/>/g) ?? []).length;
   assert.ok(points(sansForme) > points(avecForme));
+});
+
+test('un doigté de référence connaît sa forme CAGED', () => {
+  const DO: Tonalite = { tonique: 0, mode: 'maj' };
+  const lettre = (tonique: number, q: 'maj' | 'min' | 'dom7' | 'dim') =>
+    lettreCaged({ tonique, mode: 'maj' }, { rel: 0, q });
+  assert.equal(lettre(0, 'maj'), 'C', 'Do ouvert');
+  assert.equal(lettre(9, 'maj'), 'A', 'La ouvert');
+  assert.equal(lettre(7, 'maj'), 'G', 'Sol ouvert');
+  assert.equal(lettre(4, 'maj'), 'E', 'Mi ouvert');
+  assert.equal(lettre(2, 'maj'), 'D', 'Ré ouvert');
+  assert.equal(lettre(5, 'maj'), 'E', 'le barré de Fa est la forme de Mi');
+  assert.equal(lettre(10, 'maj'), 'A', 'Sib est la forme de La');
+  assert.equal(lettre(9, 'min'), 'A', 'Lam');
+  assert.equal(lettre(0, 'min'), 'A', 'Dom barré');
+  assert.equal(lettre(11, 'dom7'), null, 'Si7 ouvert n’est aucune forme telle quelle');
+  assert.equal(lettre(11, 'dim'), null);
+  assert.equal(lettreCaged(DO, { rel: 0, q: 'maj' }), 'C');
 });

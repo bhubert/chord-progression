@@ -35,6 +35,7 @@ import {
   NOMS_PENTA,
   descriptionAncre,
   forme,
+  lettreCaged,
   nomsPenta,
   placer,
   relativePenta,
@@ -165,10 +166,13 @@ export function htmlPositions({ tonalite: t, grille }: Etat): string {
     return '<p class="sous">Les positions des accords de la grille s’afficheront ici.</p>';
   }
   return accords
-    .map(
-      (a) =>
-        `<figure class="diagramme">${svgDiagramme(t, a)}<figcaption class="nom ${a.q}">${nomAccord(t, a)}</figcaption></figure>`,
-    )
+    .map((a) => {
+      const lettre = lettreCaged(t, a);
+      const badge = lettre
+        ? `<span class="badge-caged" data-forme="${lettre}" title="${NOMS_FORMES[lettre]}">${lettre}</span>`
+        : '';
+      return `<figure class="diagramme ${a.q}">${badge}${svgDiagramme(t, a)}<figcaption class="nom ${a.q}">${nomAccord(t, a)}</figcaption></figure>`;
+    })
     .join('');
 }
 
@@ -193,7 +197,7 @@ export const htmlFiltres = (filtre: Filtre): string =>
   (['toutes', ...AMBIANCES] as const)
     .map(
       (f) =>
-        `<button type="button" class="filtre" data-filtre="${f}" aria-pressed="${filtre === f}">${majuscule(f)}</button>`,
+        `<button type="button" class="filtre" data-filtre="${f}"${f === 'toutes' ? '' : ` data-ambiance="${f}"`} aria-pressed="${filtre === f}">${majuscule(f)}</button>`,
     )
     .join('');
 
@@ -207,7 +211,7 @@ export function htmlProgressions({ tonalite: t, filtre }: Etat): string {
       const dansSonMode: Tonalite = { tonique: t.tonique, mode: p.mode };
       const accords: Accord[] = p.pas.map(([rel, q]) => ({ rel, q }));
       const etiquettes = [p.mode === 'maj' ? 'majeur' : 'mineur', ...p.ambiances]
-        .map((e) => `<span class="etiquette">${e}</span>`)
+        .map((e) => `<span class="etiquette" data-ambiance="${e}">${e}</span>`)
         .join('');
       return `<button type="button" class="progression" data-progression="${PROGRESSIONS.indexOf(p)}">
   <div><div class="degres">${accords.map((a) => chiffre(a, p.mode)).join(' – ')}</div>

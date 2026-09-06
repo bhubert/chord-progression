@@ -16,7 +16,7 @@
  * diminué : on montre ses racines, c'est déjà ce qu'il faut pour le trouver.
  */
 
-import { MIDI_CORDES, PC_CORDES } from './positions.ts';
+import { MIDI_CORDES, PC_CORDES, doigte } from './positions.ts';
 import {
   PREF,
   mod12,
@@ -98,6 +98,25 @@ export function placer(t: Tonalite, a: Accord, f: Forme): Placement {
     frettes: f.decalages.map((d) => (d === null ? null : ancre + d)),
   };
 }
+
+/**
+ * La forme CAGED d'un doigté de référence, s'il en est une telle quelle : Do
+ * ouvert est la forme de Do, le barré de Fa la forme de Mi, Sib la forme de
+ * La. `null` quand le doigté n'est aucune des formes (Si7 ouvert, par exemple).
+ */
+export function lettreCaged(t: Tonalite, a: Accord): Lettre | null {
+  const d = doigte(t, a);
+  for (const f of FORMES[a.q]) {
+    const p = placer(t, a, f);
+    if (p.frettes.every((frette, i) => (frette === null ? d[i] === -1 : frette === d[i]))) {
+      return f.lettre;
+    }
+  }
+  return null;
+}
+
+/** La variable CSS de la couleur d'une forme : `var(--caged-e)`. */
+export const couleurForme = (lettre: Lettre): string => `var(--caged-${lettre.toLowerCase()})`;
 
 /** Toutes les racines de l'accord sur le manche : `[corde, case]`, cordes graves d'abord. */
 export function racines(t: Tonalite, a: Accord): [number, number][] {
@@ -275,11 +294,12 @@ export function svgManche(
         s += `<text x="${X0 - 16}" y="${y(corde) + 4}" font-size="12" fill="var(--ivoire-3)" text-anchor="middle">×</text>`;
         return;
       }
+      // La forme prend sa couleur CAGED ; l'or reste aux racines, en anneau.
       const estRacine = mod12(PC_CORDES[corde]! + f) === racine;
       if (corde === p.forme.ancre) {
-        s += `<circle cx="${xCase(f)}" cy="${y(corde)}" r="13" fill="none" stroke="var(--laiton)" stroke-width="2"/>`;
+        s += `<circle cx="${xCase(f)}" cy="${y(corde)}" r="13.5" fill="none" stroke="var(--laiton)" stroke-width="2.2"/>`;
       }
-      s += `<circle cx="${xCase(f)}" cy="${y(corde)}" r="8" fill="var(${estRacine ? '--laiton' : '--ivoire'})"/>`;
+      s += `<circle cx="${xCase(f)}" cy="${y(corde)}" r="8" fill="${couleurForme(p.forme.lettre)}"${estRacine ? ' stroke="var(--laiton)" stroke-width="2.4"' : ''}/>`;
     });
   }
   return s + '</svg>';

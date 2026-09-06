@@ -132,10 +132,16 @@ request vers `main` (contrôles sans déploiement).
 
 ## Choix de conception
 
-- **Un seul thème, sombre, forcé.** Palissandre, ivoire, laiton. Les accords
-  mineurs sont bleutés, les diminués mauves : la couleur dit la qualité. Un
-  thème clair « érable » reste possible en redéfinissant les variables de
-  `global.css`.
+- **Un seul thème, sombre, forcé.** Palissandre, ivoire, laiton, une lueur
+  ambrée. La couleur dit toujours quelque chose : la qualité d'un accord
+  (mineur bleu, diminué mauve, septième orange, jusqu'au liseré de chaque
+  mesure), l'ambiance d'une progression (filtres et étiquettes), la forme
+  CAGED. Un thème clair « érable » reste possible en redéfinissant les
+  variables de `global.css`.
+- **Une couleur par forme CAGED**, la même partout : boutons du manche, forme
+  dessinée, badge sur les diagrammes de positions. C rouge, A jaune, G vert,
+  E bleu, D violet, l'arc-en-ciel dans l'ordre des formes. Il n'existe pas de
+  norme ; pour en suivre une autre, changer les cinq variables `--caged-*`.
 - **Polices auto-hébergées.** Gloock pour les titres, Barlow pour l'interface,
   Barlow Semi Condensed pour les symboles d'accords. Sous-ensemble latin,
   112 ko en tout, licence OFL. Rien ne vient d'un CDN : la CSP l'interdit.

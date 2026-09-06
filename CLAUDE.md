@@ -103,10 +103,17 @@ dans `tsconfig.json`), et aucun accès au DOM dans `theorie.ts`, `positions.ts`,
 
 ## Décisions à ne pas défaire sans raison
 
-- **Un seul thème, sombre, forcé.** Palissandre, ivoire, laiton ; mineur
-  bleuté, diminué mauve. Choisi contre les concurrents, tous gris, bleus ou
-  blancs. Un thème clair « érable » se ferait en redéfinissant les variables
-  de `global.css`, pas en ajoutant des couleurs en dur.
+- **Un seul thème, sombre, forcé.** Palissandre, ivoire, laiton, lueur
+  ambrée ; mineur bleu, diminué mauve, septième orange. Choisi contre les
+  concurrents, tous gris, bleus ou blancs. Un thème clair « érable » se ferait
+  en redéfinissant les variables de `global.css`, pas en ajoutant des couleurs
+  en dur. La teinte locale passe par `--teinte` (qualité, ambiance) et
+  `--caged` (forme) : une règle `color-mix` par usage, jamais une couleur par
+  élément.
+- **Une couleur par forme CAGED**, cinq variables `--caged-*`. C rouge, A
+  jaune, G vert, E bleu, D violet : un choix, pas une norme (FaChords alterne
+  rouge et bleu, Triads & CAGED met C en bleu). Tout passe par ces variables,
+  y compris le SVG du manche.
 - **Aucune dépendance côté navigateur.** Web Audio et SVG maison. Le script
   pèse 16 ko avant compression ; une bibliothèque de son ou de diagrammes
   coûterait plus qu'elle n'apporte.

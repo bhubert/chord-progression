@@ -132,7 +132,7 @@ export function svgDiagramme(t: Tonalite, a: Accord): string {
   else
     s += `<text x="9" y="${Y(pos) + 4}" font-size="11" fill="var(--ivoire-2)" text-anchor="middle">${pos}</text>`;
   if (barre) {
-    s += `<rect x="${X(barre.de) - 5}" y="${Y(barre.f) - 5}" width="${X(barre.a) - X(barre.de) + 10}" height="10" rx="5" fill="var(--ivoire)"/>`;
+    s += `<rect x="${X(barre.de) - 5}" y="${Y(barre.f) - 5}" width="${X(barre.a) - X(barre.de) + 10}" height="10" rx="5" fill="var(--point, var(--ivoire))"/>`;
   }
   v.forEach((f, i) => {
     const estFond = mod12(PC_CORDES[i]! + Math.max(f, 0)) === fond;
@@ -141,7 +141,7 @@ export function svgDiagramme(t: Tonalite, a: Accord): string {
     } else if (f === 0) {
       s += `<circle cx="${X(i)}" cy="12" r="3.4" fill="none" stroke="var(${estFond ? '--laiton' : '--ivoire-2'})" stroke-width="1.4"/>`;
     } else if (!(barre && f === barre.f)) {
-      s += `<circle cx="${X(i)}" cy="${Y(f)}" r="5" fill="var(${estFond ? '--laiton' : '--ivoire'})"/>`;
+      s += `<circle cx="${X(i)}" cy="${Y(f)}" r="5" fill="${estFond ? 'var(--laiton)' : 'var(--point, var(--ivoire))'}"/>`;
     } else if (estFond) {
       s += `<circle cx="${X(i)}" cy="${Y(f)}" r="3" fill="var(--laiton)"/>`;
     }

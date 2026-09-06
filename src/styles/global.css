@@ -1,8 +1,12 @@
 /*
  * Un seul thème, « palissandre » : fond bois sombre, texte ivoire, laiton pour
- * ce qui se clique ou qui joue. Les accords mineurs sont bleutés, les
- * diminués mauves, les septièmes cuivrées : la couleur dit la qualité, pas
- * l'humeur.
+ * ce qui se clique ou qui joue. La couleur dit toujours quelque chose : la
+ * qualité d'un accord (mineur bleu, diminué mauve, septième orange), la forme
+ * CAGED (une couleur par lettre), l'ambiance d'une progression.
+ *
+ * Le code couleur CAGED suit l'arc-en-ciel dans l'ordre des formes : C rouge,
+ * A jaune, G vert, E bleu, D violet. Il n'existe pas de norme ; pour en
+ * adopter une autre, changer les cinq variables `--caged-*`, rien d'autre.
  *
  * Pas de bloc `prefers-color-scheme` : c'est un choix, le site s'affiche
  * pareil partout. Un thème clair « érable » reste possible plus tard, en
@@ -10,19 +14,26 @@
  */
 
 :root {
-  --bois: #1b1411;
-  --bois-2: #241a15;
-  --bois-3: #2f221b;
-  --frette: #4a3d34;
-  --frette-2: #6a5a4d;
-  --ivoire: #f0e6d3;
-  --ivoire-2: #b8a992;
-  --ivoire-3: #7f7263;
-  --laiton: #d9ae5c;
-  --laiton-2: #f1cb7a;
-  --mineur: #91b4c8;
-  --dim: #c39bb4;
-  --septieme: #e2a97c;
+  --bois: #211712;
+  --bois-2: #2c1e18;
+  --bois-3: #3a2920;
+  --frette: #57453a;
+  --frette-2: #7e6756;
+  --ivoire: #f8eedb;
+  --ivoire-2: #cfbda1;
+  --ivoire-3: #998773;
+  --laiton: #f5b942;
+  --laiton-2: #ffd46e;
+  --mineur: #7fc9f0;
+  --dim: #df9fe6;
+  --septieme: #ff9f5c;
+  --caged-c: #ff6b6b;
+  --caged-a: #ffd23f;
+  --caged-g: #5fd39a;
+  --caged-e: #5aaeff;
+  --caged-d: #c58bff;
+  /* Teinte locale : posée par la qualité d'un accord, une ambiance ou une forme. */
+  --teinte: var(--ivoire);
   --police-titre: 'Gloock', Georgia, 'Times New Roman', serif;
   --police-ui: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --police-accord: 'Barlow Semi Condensed', 'Arial Narrow', Arial, sans-serif;
@@ -38,7 +49,11 @@ html {
 body {
   margin: 0;
   background: var(--bois);
-  background-image: radial-gradient(ellipse 70% 40% at 20% 0%, #2a1e17 0%, transparent 70%);
+  /* Une lueur ambrée en haut à gauche, un fond de bordeaux en bas à droite :
+     le bois vernis d'un instrument sous une lampe, pas un aplat. */
+  background-image:
+    radial-gradient(ellipse 70% 45% at 12% -5%, rgba(255, 172, 72, 0.16) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 45% at 100% 100%, rgba(255, 96, 118, 0.09) 0%, transparent 60%);
   color: var(--ivoire);
   font: 15px/1.5 var(--police-ui);
   -webkit-font-smoothing: antialiased;
@@ -77,7 +92,12 @@ a {
   margin: 0;
   font: 400 48px/1 var(--police-titre);
   letter-spacing: -0.01em;
-  color: var(--ivoire);
+  /* Ivoire vers laiton, comme un logo de tête de manche. */
+  color: var(--laiton-2);
+  background: linear-gradient(100deg, var(--ivoire) 0%, var(--laiton-2) 60%, var(--laiton) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 .slogan {
   margin: 10px 0 0;
@@ -214,9 +234,26 @@ a {
 .mesure:hover {
   background: var(--bois-2);
 }
+/* Un liseré en haut de chaque mesure, à la couleur de la qualité de l'accord,
+   comme un trait de surligneur sur une grille papier. */
+.mesure[data-i] {
+  box-shadow: inset 0 3px 0 color-mix(in srgb, var(--teinte) 55%, transparent);
+}
 .mesure.joue {
-  background: var(--bois-3);
-  box-shadow: inset 0 -3px 0 var(--laiton);
+  background: color-mix(in srgb, var(--laiton) 10%, var(--bois-3));
+  box-shadow:
+    inset 0 3px 0 color-mix(in srgb, var(--teinte) 55%, transparent),
+    inset 0 -3px 0 var(--laiton);
+}
+/* La qualité de l'accord teinte son contenant : mesure, puce, choix. */
+:is(.mesure, .puce, .choix):has(> .accord.min) {
+  --teinte: var(--mineur);
+}
+:is(.mesure, .puce, .choix):has(> .accord.dim) {
+  --teinte: var(--dim);
+}
+:is(.mesure, .puce, .choix):has(> .accord.dom7) {
+  --teinte: var(--septieme);
 }
 .mesure.blanche {
   cursor: default;
@@ -315,11 +352,12 @@ a {
   height: 12px;
 }
 .btn-principal {
-  background: var(--laiton);
+  background: linear-gradient(180deg, var(--laiton-2), var(--laiton));
   border-color: var(--laiton);
   color: var(--bois);
   font-weight: 600;
   padding: 9px 18px;
+  box-shadow: 0 4px 18px rgba(245, 185, 66, 0.28);
 }
 .btn-principal:hover {
   background: var(--laiton-2);
@@ -397,8 +435,8 @@ a {
   gap: 5px;
   min-width: 66px;
   padding: 10px 12px 9px;
-  background: var(--bois-2);
-  border: 1px solid var(--frette);
+  background: color-mix(in srgb, var(--teinte) 8%, var(--bois-2));
+  border: 1px solid color-mix(in srgb, var(--teinte) 25%, var(--frette));
   border-radius: 4px;
   color: var(--ivoire);
   cursor: pointer;
@@ -408,8 +446,8 @@ a {
     border-color 0.15s;
 }
 .puce:hover {
-  background: var(--bois-3);
-  border-color: var(--frette-2);
+  background: color-mix(in srgb, var(--teinte) 16%, var(--bois-3));
+  border-color: color-mix(in srgb, var(--teinte) 45%, var(--frette-2));
 }
 .puce .accord {
   font-size: 26px;
@@ -472,9 +510,30 @@ a {
   gap: 14px 16px;
 }
 .diagramme {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+.diagramme.min {
+  --point: var(--mineur);
+}
+.diagramme.dim {
+  --point: var(--dim);
+}
+.diagramme.dom7 {
+  --point: var(--septieme);
+}
+/* La forme CAGED du doigté, dans sa couleur, en coin. */
+.badge-caged {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  font: 700 12px/1 var(--police-accord);
+  color: var(--bois);
+  background: var(--caged, var(--ivoire));
+  border-radius: 4px;
+  padding: 3px 5px 2px;
 }
 .diagramme svg {
   width: 94px;
@@ -537,8 +596,8 @@ a {
 }
 .choix {
   padding: 6px 12px;
-  background: var(--bois-2);
-  border: 1px solid var(--frette);
+  background: color-mix(in srgb, var(--teinte) 8%, var(--bois-2));
+  border: 1px solid color-mix(in srgb, var(--teinte) 25%, var(--frette));
   border-radius: 4px;
   color: var(--ivoire);
   cursor: pointer;
@@ -593,18 +652,31 @@ a {
   background: var(--bois-3);
   border-color: var(--frette-2);
 }
+/* Une couleur par forme, la même partout : boutons, manche, badges. */
+[data-forme='C'] {
+  --caged: var(--caged-c);
+}
+[data-forme='A'] {
+  --caged: var(--caged-a);
+}
+[data-forme='G'] {
+  --caged: var(--caged-g);
+}
+[data-forme='E'] {
+  --caged: var(--caged-e);
+}
+[data-forme='D'] {
+  --caged: var(--caged-d);
+}
 .forme[aria-pressed='true'] {
-  border-color: var(--laiton);
-  background: var(--bois-3);
+  border-color: var(--caged, var(--laiton));
+  background: color-mix(in srgb, var(--caged, var(--laiton)) 14%, var(--bois-2));
 }
 .forme .lettre {
   font: 600 30px/1 var(--police-accord);
   min-width: 1em;
   text-align: center;
-  color: var(--ivoire);
-}
-.forme[aria-pressed='true'] .lettre {
-  color: var(--laiton);
+  color: var(--caged, var(--laiton));
 }
 .forme .ou {
   font-size: 13px;
@@ -629,11 +701,42 @@ a {
   flex-wrap: wrap;
   gap: 6px;
 }
+/* Chaque ambiance a sa teinte, reprise par le filtre et par l'étiquette. */
+[data-ambiance='pop'] {
+  --teinte: #ff6fae;
+}
+[data-ambiance='lumineux'] {
+  --teinte: #ffd23f;
+}
+[data-ambiance='mélancolique'] {
+  --teinte: #7fc9f0;
+}
+[data-ambiance='rock'] {
+  --teinte: #ff6b6b;
+}
+[data-ambiance='folk'] {
+  --teinte: #5fd39a;
+}
+[data-ambiance='jazz'] {
+  --teinte: #c58bff;
+}
+[data-ambiance='rétro'] {
+  --teinte: #ffb347;
+}
+[data-ambiance='sombre'] {
+  --teinte: #a3aecb;
+}
+[data-ambiance='blues'] {
+  --teinte: #6d8cff;
+}
+[data-ambiance='mineur'] {
+  --teinte: var(--mineur);
+}
 .filtre {
   padding: 5px 12px;
-  border: 1px solid var(--frette);
+  border: 1px solid color-mix(in srgb, var(--teinte) 35%, var(--frette));
   border-radius: 999px;
-  background: transparent;
+  background: color-mix(in srgb, var(--teinte) 6%, transparent);
   color: var(--ivoire-2);
   font: 500 13px var(--police-ui);
   cursor: pointer;
@@ -643,12 +746,12 @@ a {
 }
 .filtre:hover {
   color: var(--ivoire);
-  border-color: var(--frette-2);
+  background: color-mix(in srgb, var(--teinte) 16%, transparent);
 }
 .filtre[aria-pressed='true'] {
-  background: var(--ivoire);
+  background: var(--teinte);
   color: var(--bois);
-  border-color: var(--ivoire);
+  border-color: var(--teinte);
 }
 .liste-progressions {
   margin-top: 18px;
@@ -702,8 +805,9 @@ a {
 }
 .etiquette {
   font-size: 12px;
-  color: var(--ivoire-3);
-  border: 1px solid var(--frette);
+  color: color-mix(in srgb, var(--teinte) 75%, var(--ivoire));
+  border: 1px solid color-mix(in srgb, var(--teinte) 30%, var(--frette));
+  background: color-mix(in srgb, var(--teinte) 8%, transparent);
   border-radius: 999px;
   padding: 1px 8px;
 }
