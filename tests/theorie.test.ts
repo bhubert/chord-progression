@@ -84,3 +84,14 @@ test('une adresse inconnue ou un accord inconnu sont ignorés sans erreur', () =
     { rel: 7, q: 'maj' },
   ]);
 });
+
+test('la septième de dominante s’écrit avec un 7, dans l’adresse aussi', () => {
+  assert.equal(nomAccord(SOL, { rel: 7, q: 'dom7' }), 'D7');
+  assert.equal(chiffre({ rel: 7, q: 'dom7' }, 'maj'), 'V7');
+  assert.equal(chiffre({ rel: 7, q: 'dom7' }, 'min'), 'V7');
+  const blues = [0, 5, 7].map((rel) => ({ rel, q: 'dom7' as const }));
+  assert.equal(adresse(SOL, blues), '#sol-majeur/I7-IV7-V7');
+  assert.deepEqual(lireAdresse('#sol-majeur/I7-IV7-V7')?.grille, blues);
+  // Une septième n'est pas diatonique : le passage en mineur la laisse telle quelle.
+  assert.deepEqual(transposerMode(blues, 'maj', 'min'), blues);
+});

@@ -8,14 +8,17 @@ import Base from '../layouts/Base.astro';
 import {
   etatInitial,
   htmlApres,
+  htmlBlues,
   htmlCapo,
   htmlDiatoniques,
   htmlFiltres,
   htmlGrille,
-  optionsTonique,
+  htmlMotif,
   htmlPositions,
   htmlProgressions,
   htmlTitreTonalite,
+  optionsRythmique,
+  optionsTonique,
 } from '../data/rendu.ts';
 
 const etat = etatInitial();
@@ -78,6 +81,19 @@ const etat = etatInitial();
             <input type="range" id="tempo" min="60" max="160" value="92" />
             <output id="tempo-valeur">92</output>
           </label>
+          <label class="reglage-rythmique"
+            >Rythmique
+            <select class="select select-petit" id="rythmique">
+              {
+                optionsRythmique(etat).map((o) => (
+                  <option value={o.valeur} selected={o.choisie}>
+                    {o.libelle}
+                  </option>
+                ))
+              }
+            </select>
+          </label>
+          <span class="motif" id="motif" aria-hidden="true" set:html={htmlMotif(etat.rythmique)} />
           <button type="button" class="btn pousse" id="partager">Copier le lien</button>
           <button type="button" class="btn btn-discret" id="vider">Vider la grille</button>
         </div>
@@ -89,11 +105,13 @@ const etat = etatInitial();
             <h2 id="titre-tonalite">{htmlTitreTonalite(etat.tonalite)}</h2>
           </div>
           <div class="puces" id="diatoniques" set:html={htmlDiatoniques(etat.tonalite)} />
+          <div class="apres" id="blues" set:html={htmlBlues(etat.tonalite)} />
           <div class="apres" id="apres" set:html={htmlApres(etat)} />
           <p class="legende">
             <span class="pastille maj"></span>majeur
             <span class="pastille min"></span>mineur
             <span class="pastille dim"></span>diminué
+            <span class="pastille dom7"></span>septième
           </p>
         </section>
 
@@ -121,8 +139,9 @@ const etat = etatInitial();
       <section class="apropos" aria-label="À propos">
         <p>
           Grille est un outil gratuit pour trouver des progressions d’accords à la guitare : une
-          tonalité, ses sept accords, une grille qu’on remplit en cliquant, l’écoute, les positions
-          et le capo qui va bien. Sans compte, sans publicité, sans rien à télécharger.
+          tonalité, ses sept accords, une grille qu’on remplit en cliquant, l’écoute avec huit
+          rythmiques, les positions et le capo qui va bien. Sans compte, sans publicité, sans rien à
+          télécharger.
         </p>
         <p>
           Le lien de la page décrit la grille en clair : copiez-le, il rejouera exactement ce que

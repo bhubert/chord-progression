@@ -11,7 +11,8 @@
  */
 
 export type Mode = 'maj' | 'min';
-export type Qualite = 'maj' | 'min' | 'dim';
+/** `dom7` : septième de dominante, la couleur du blues. */
+export type Qualite = 'maj' | 'min' | 'dim' | 'dom7';
 export type Alteration = '#' | 'b';
 
 export interface Accord {
@@ -67,7 +68,7 @@ export const CHIFFRES: Record<Mode, readonly string[]> = {
   min: ['I', 'bII', 'II', 'III', '#III', 'IV', 'bV', 'V', 'VI', '#VI', 'VII', '#VII'],
 };
 
-export const SUFFIXE: Record<Qualite, string> = { maj: '', min: 'm', dim: '°' };
+export const SUFFIXE: Record<Qualite, string> = { maj: '', min: 'm', dim: '°', dom7: '7' };
 export const NOM_MODE: Record<Mode, string> = { maj: 'majeur', min: 'mineur' };
 
 export const mod12 = (n: number): number => ((n % 12) + 12) % 12;
@@ -105,11 +106,12 @@ export const racine = (t: Tonalite, a: Accord): string => nomNote(semiAbsolu(t, 
 /** « F#m ». */
 export const nomAccord = (t: Tonalite, a: Accord): string => racine(t, a) + SUFFIXE[a.q];
 
-/** « vi », « bVII », « vii° ». */
+/** « vi », « bVII », « vii° », « V7 ». */
 export function chiffre(a: Accord, mode: Mode): string {
   let c = CHIFFRES[mode][a.rel]!;
-  if (a.q !== 'maj') c = c.replace(/[IV]+/, (m) => m.toLowerCase());
+  if (a.q === 'min' || a.q === 'dim') c = c.replace(/[IV]+/, (m) => m.toLowerCase());
   if (a.q === 'dim') c += '°';
+  if (a.q === 'dom7') c += '7';
   return c;
 }
 
@@ -151,7 +153,7 @@ export function transposerMode(grille: readonly Accord[], ancien: Mode, nouveau:
 // ── Adresse ────────────────────────────────────────────────────────────────
 //
 // `#sol-majeur/I-V-vi-IV`. Lisible, sans caractère à encoder : le ° s'écrit
-// `o`, les altérations `-diese` et `-bemol`. Un lien décrit la grille en clair.
+// `o`, la septième `7`, les altérations `-diese` et `-bemol`. Un lien décrit la grille en clair.
 
 const sansAccents = (s: string): string => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
@@ -171,11 +173,12 @@ export function lireAdresse(hash: string): { tonalite: Tonalite; grille: Accord[
   const tonique = mod12(SLUG_FR[m[1]!]! + (m[2] === 'diese' ? 1 : m[2] === 'bemol' ? -1 : 0));
   const grille = (m[4] ? m[4].split('-') : [])
     .map((c): Accord | null => {
-      const p = /^([b#]?)([ivIV]+)(o?)$/.exec(c);
+      const p = /^([b#]?)([ivIV]+)(o|7)?$/.exec(c);
       if (!p) return null;
       const rel = CHIFFRES[mode].indexOf(p[1]! + p[2]!.toUpperCase());
       if (rel < 0) return null;
-      const q: Qualite = p[3] ? 'dim' : p[2] === p[2]!.toLowerCase() ? 'min' : 'maj';
+      const q: Qualite =
+        p[3] === 'o' ? 'dim' : p[3] === '7' ? 'dom7' : p[2] === p[2]!.toLowerCase() ? 'min' : 'maj';
       return { rel, q };
     })
     .filter((a): a is Accord => a !== null);

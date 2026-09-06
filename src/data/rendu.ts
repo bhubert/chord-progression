@@ -27,7 +27,8 @@ import {
 } from './theorie.ts';
 import { meilleurCapo, svgDiagramme } from './positions.ts';
 import { AMBIANCES, PROGRESSIONS, SUITES, type Ambiance } from './progressions.ts';
-import { PREF } from './theorie.ts';
+import { GAMMES, PREF } from './theorie.ts';
+import { RYTHMIQUES, RYTHMIQUE_DEFAUT, rythmique as rythmiqueParId } from './rythmiques.ts';
 
 export type Filtre = Ambiance | 'toutes';
 
@@ -36,6 +37,8 @@ export interface Etat {
   grille: Accord[];
   boucle: boolean;
   filtre: Filtre;
+  /** Id d'une entrée de `RYTHMIQUES`. */
+  rythmique: string;
 }
 
 export const MAX_MESURES = 16;
@@ -47,6 +50,7 @@ export const etatInitial = (): Etat => ({
   grille: PROGRESSIONS[0]!.pas.map(([rel, q]) => ({ rel, q })),
   boucle: true,
   filtre: 'toutes',
+  rythmique: RYTHMIQUE_DEFAUT,
 });
 
 const majuscule = (s: string) => s[0]!.toUpperCase() + s.slice(1);
@@ -112,13 +116,26 @@ export const htmlDiatoniques = (t: Tonalite): string =>
     .map((a) => htmlPuce(t, a))
     .join('');
 
+/** Les trois septièmes du blues, en majeur seulement : I7, IV7, V7. */
+export function htmlBlues(t: Tonalite): string {
+  if (t.mode !== 'maj') return '';
+  const septiemes: Accord[] = [0, 5, 7].map((rel) => ({ rel, q: 'dom7' }));
+  return (
+    '<span>Pour un blues, les trois septièmes :</span>' +
+    septiemes.map((a) => htmlPuce(t, a, true)).join('')
+  );
+}
+
 /** « Souvent après Do : Ré, Sol, Lam ». Vide quand la grille l'est. */
 export function htmlApres({ tonalite: t, grille }: Etat): string {
   const dernier = grille[grille.length - 1];
   if (!dernier) return '';
+  // Un accord hors gamme (une septième de blues, un emprunt) est rapproché du
+  // degré qui porte la même fondamentale ; à défaut, on renvoie vers la tonique.
   const d = degreDe(dernier, t.mode);
+  const degre = d >= 0 ? d : GAMMES[t.mode].deg.indexOf(dernier.rel);
   const dia = diatoniques(t.mode);
-  const suivants = d >= 0 ? SUITES[t.mode][d]! : [0, 3, 4];
+  const suivants = degre >= 0 ? SUITES[t.mode][degre]! : [0, 3, 4];
   return (
     `<span>Souvent après <b>${nomAccord(t, dernier)}</b> :</span>` +
     suivants.map((i) => htmlPuce(t, dia[i]!, true)).join('')
@@ -184,3 +201,28 @@ export function htmlProgressions({ tonalite: t, filtre }: Etat): string {
     })
     .join('');
 }
+
+export const optionsRythmique = (
+  etat: Etat,
+): { valeur: string; libelle: string; choisie: boolean }[] =>
+  RYTHMIQUES.map((r) => ({ valeur: r.id, libelle: r.nom, choisie: r.id === etat.rythmique }));
+
+export const htmlOptionsRythmique = (etat: Etat): string =>
+  optionsRythmique(etat)
+    .map((o) => `<option value="${o.valeur}"${o.choisie ? ' selected' : ''}>${o.libelle}</option>`)
+    .join('');
+
+const AFFICHAGE_JETON: Record<string, string> = {
+  '.': '·',
+  B: '↓',
+  b: '<span class="doux">↓</span>',
+  H: '↑',
+  p: 'p',
+  i: 'i',
+  m: 'm',
+  a: 'a',
+};
+
+/** Le motif en flèches : ↓ · ↓ ↑ · ↑ ↓ ↑ */
+export const htmlMotif = (id: string): string =>
+  [...rythmiqueParId(id).motif].map((j) => AFFICHAGE_JETON[j] ?? j).join(' ');

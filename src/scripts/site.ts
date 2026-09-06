@@ -13,22 +13,41 @@
  *
  * **Le son est synthétisé, pas échantillonné.** Web Audio, un oscillateur
  * triangle et un peu de dent de scie par corde, filtre passe-bas qui se ferme,
- * six cordes décalées de 24 ms pour le battement. Zéro téléchargement, et
+ * cordes décalées de 24 ms pour le battement. Zéro téléchargement, et
  * l'`AudioContext` n'est créé qu'au premier clic sur « Écouter » : les
  * navigateurs refusent de le démarrer avant un geste.
+ *
+ * **Le séquenceur ne programme que 120 ms d'avance.** Un `setTimeout` toutes
+ * les 40 ms regarde l'horloge audio et pose les prochaines croches, jamais
+ * plus. C'est ce qui rend tout immédiat : le tempo, la rythmique, la tonalité
+ * et la grille sont relus à chaque croche, et « Arrêter » ferme la sortie en
+ * 30 ms au lieu d'attendre la fin d'un tour programmé d'avance. Le tour entier
+ * programmé d'un coup, c'est ce qui faisait se mélanger les sons quand on
+ * touchait au tempo en cours de lecture.
  */
 
-import { adresse, lireAdresse, nomTonalite, transposerMode, type Mode } from '../data/theorie.ts';
+import {
+  adresse,
+  lireAdresse,
+  nomTonalite,
+  transposerMode,
+  type Mode,
+  type Qualite,
+} from '../data/theorie.ts';
 import { notesMidi } from '../data/positions.ts';
 import { PROGRESSIONS } from '../data/progressions.ts';
+import { dureesCroches, rythmique as rythmiqueParId } from '../data/rythmiques.ts';
 import {
   MAX_MESURES,
   etatInitial,
   htmlApres,
+  htmlBlues,
   htmlCapo,
   htmlDiatoniques,
   htmlFiltres,
   htmlGrille,
+  htmlMotif,
+  htmlOptionsRythmique,
   htmlOptionsTonique,
   htmlPositions,
   htmlProgressions,
@@ -60,10 +79,12 @@ function rendreGrille(): void {
   $('#grille').innerHTML = htmlGrille(etat);
   $('#cadre').classList.toggle('boucle', etat.boucle);
   $('#boucle').setAttribute('aria-pressed', String(etat.boucle));
+  lecteur.surligner();
 }
 
 function rendreTonalite(): void {
   $('#diatoniques').innerHTML = htmlDiatoniques(etat.tonalite);
+  $('#blues').innerHTML = htmlBlues(etat.tonalite);
   $('#apres').innerHTML = htmlApres(etat);
 }
 
@@ -79,6 +100,11 @@ function rendreProgressions(): void {
   $('#progressions').innerHTML = htmlProgressions(etat);
 }
 
+function rendreRythmique(): void {
+  $('#rythmique').innerHTML = htmlOptionsRythmique(etat);
+  $('#motif').innerHTML = htmlMotif(etat.rythmique);
+}
+
 function ecrireAdresse(): void {
   const h = adresse(etat.tonalite, etat.grille);
   if (location.hash !== h) history.replaceState(null, '', h);
@@ -90,7 +116,6 @@ function rendreGrilleEtSuite(): void {
   rendreTonalite();
   rendrePositions();
   ecrireAdresse();
-  lecteur.reprendreSiLecture();
 }
 
 /** Après un changement de tonalité ou de mode : tout dépend d'elle. */
@@ -100,8 +125,8 @@ function toutRendre(): void {
   rendreTonalite();
   rendrePositions();
   rendreProgressions();
+  rendreRythmique();
   ecrireAdresse();
-  lecteur.reprendreSiLecture();
 }
 
 // ── Son ────────────────────────────────────────────────────────────────────
@@ -113,10 +138,27 @@ const ICONE_ARRET =
 
 const frequence = (midi: number): number => 440 * Math.pow(2, (midi - 69) / 12);
 
+/** Corde visée par un jeton d'arpège, comptée depuis la plus aiguë. */
+const DEPUIS_AIGU: Record<string, number> = { a: 0, m: 1, i: 2 };
+
 class Lecteur {
+  /** Secondes de musique programmées d'avance. Assez pour ne jamais manquer une croche, assez peu pour que tout changement s'entende de suite. */
+  private static readonly AVANCE = 0.12;
+  /** Millisecondes entre deux passages du séquenceur. */
+  private static readonly INTERVALLE = 40;
+
   private ctx: AudioContext | null = null;
+  /** Sortie générale, derrière le compresseur. */
   private sortie: GainNode | null = null;
-  private minuteurs: number[] = [];
+  /** La lecture en cours. Tout ce qui est programmé passe par là, et c'est là qu'on coupe. */
+  private voix: GainNode | null = null;
+  private minuteur = 0;
+  private surlignages: number[] = [];
+  /** Croche courante, de 0 à 8 × mesures. */
+  private position = 0;
+  /** Instant audio de la croche courante. */
+  private prochainTemps = 0;
+  mesureCourante = -1;
   enLecture = false;
 
   private pincer(f: number, t: number, velocite: number): void {
@@ -143,47 +185,81 @@ class Lecteur {
     o2.connect(g2);
     g2.connect(filtre);
     filtre.connect(g);
-    g.connect(this.sortie!);
+    g.connect(this.voix!);
     o.start(t);
     o2.start(t);
     o.stop(t + 1.8);
     o2.stop(t + 1.8);
   }
 
-  /** Un battement : vers le bas sur les six cordes, vers le haut sur les quatre aiguës. */
+  /** Un battement : vers le bas sur toutes les cordes, vers le haut sur les quatre aiguës. */
   private battre(notes: number[], t: number, velocite: number, vers: 'bas' | 'haut'): void {
     const cordes = vers === 'haut' ? notes.slice(-4).reverse() : notes;
     cordes.forEach((n, i) => this.pincer(frequence(n), t + i * 0.024, velocite));
   }
 
-  /** Programme un tour complet de la grille, puis se rappelle si la boucle est active. */
-  private passe(): void {
-    const ctx = this.ctx!;
-    const t0 = ctx.currentTime + 0.06;
-    const temps = 60 / tempo;
-    const dans = (t: number) => Math.max(0, (t - ctx.currentTime) * 1000);
-    etat.grille.forEach((a, i) => {
-      const notes = notesMidi(etat.tonalite, a);
-      const tb = t0 + i * 4 * temps;
-      this.battre(notes, tb, 1, 'bas');
-      this.battre(notes, tb + temps, 0.55, 'haut');
-      this.battre(notes, tb + 2 * temps, 0.85, 'bas');
-      this.battre(notes, tb + 2.5 * temps, 0.45, 'haut');
-      this.battre(notes, tb + 3 * temps, 0.6, 'haut');
-      this.minuteurs.push(
+  private dans(t: number): number {
+    return Math.max(0, (t - this.ctx!.currentTime) * 1000);
+  }
+
+  /** Pose la croche courante à l'instant `t`, selon la rythmique du moment. */
+  private programmer(t: number): void {
+    const mesure = Math.floor(this.position / 8);
+    const croche = this.position % 8;
+    const accord = etat.grille[mesure];
+    if (!accord) return;
+    const notes = notesMidi(etat.tonalite, accord);
+    const jeton = rythmiqueParId(etat.rythmique).motif[croche]!;
+    if (jeton === 'B') this.battre(notes, t, 1, 'bas');
+    else if (jeton === 'b') this.battre(notes, t, 0.6, 'bas');
+    else if (jeton === 'H') this.battre(notes, t, 0.5, 'haut');
+    else if (jeton === 'p') this.pincer(frequence(notes[0]!), t, 0.9);
+    else if (jeton in DEPUIS_AIGU) {
+      const n = notes[Math.max(0, notes.length - 1 - DEPUIS_AIGU[jeton]!)]!;
+      this.pincer(frequence(n), t, 0.7);
+    }
+    if (croche === 0) {
+      this.surlignages.push(
         window.setTimeout(() => {
-          document.querySelectorAll('.mesure.joue').forEach((m) => m.classList.remove('joue'));
-          document.querySelector(`.mesure[data-i="${i}"]`)?.classList.add('joue');
-        }, dans(tb)),
+          this.mesureCourante = mesure;
+          this.surligner();
+        }, this.dans(t)),
       );
-    });
-    const fin = t0 + etat.grille.length * 4 * temps;
-    this.minuteurs.push(
-      window.setTimeout(() => {
-        if (etat.boucle && this.enLecture) this.passe();
-        else this.arreter();
-      }, dans(fin)),
-    );
+    }
+  }
+
+  /** Le séquenceur : programme ce qui tombe dans la fenêtre d'avance, puis se rappelle. */
+  private tourner(): void {
+    const ctx = this.ctx!;
+    if (!etat.grille.length) {
+      this.arreter();
+      return;
+    }
+    while (this.prochainTemps < ctx.currentTime + Lecteur.AVANCE) {
+      if (this.position >= etat.grille.length * 8) {
+        if (!etat.boucle) {
+          // Fin de grille : on laisse sonner le dernier accord, sans le couper.
+          this.surlignages.push(
+            window.setTimeout(() => this.arreter(false), this.dans(this.prochainTemps)),
+          );
+          return;
+        }
+        this.position = 0;
+      }
+      this.programmer(this.prochainTemps);
+      const durees = dureesCroches(rythmiqueParId(etat.rythmique));
+      this.prochainTemps += (60 / tempo) * durees[this.position % 8]!;
+      this.position++;
+    }
+    this.minuteur = window.setTimeout(() => this.tourner(), Lecteur.INTERVALLE);
+  }
+
+  /** Remet la classe `joue` sur la bonne mesure, y compris après un nouveau rendu de la grille. */
+  surligner(): void {
+    document.querySelectorAll('.mesure.joue').forEach((m) => m.classList.remove('joue'));
+    if (this.enLecture && this.mesureCourante >= 0) {
+      document.querySelector(`.mesure[data-i="${this.mesureCourante}"]`)?.classList.add('joue');
+    }
   }
 
   jouer(): void {
@@ -202,24 +278,42 @@ class Lecteur {
       compresseur.connect(this.ctx.destination);
     }
     void this.ctx.resume();
+    this.voix = this.ctx.createGain();
+    this.voix.connect(this.sortie!);
     this.enLecture = true;
+    this.position = 0;
+    this.prochainTemps = this.ctx.currentTime + 0.05;
+    this.mesureCourante = -1;
     $('#jouer').innerHTML = ICONE_ARRET;
-    this.passe();
+    this.tourner();
   }
 
-  arreter(): void {
-    this.enLecture = false;
-    this.minuteurs.forEach(clearTimeout);
-    this.minuteurs = [];
-    document.querySelectorAll('.mesure.joue').forEach((m) => m.classList.remove('joue'));
-    $('#jouer').innerHTML = ICONE_LECTURE;
-  }
-
-  /** La grille a changé pendant la lecture : on repart du début, sur la nouvelle. */
-  reprendreSiLecture(): void {
+  /**
+   * `couper` : fermer la sortie en 30 ms. C'est le bouton « Arrêter ». À la fin
+   * naturelle d'une grille sans boucle, on ne coupe pas : le dernier accord
+   * finit de sonner.
+   */
+  arreter(couper = true): void {
     if (!this.enLecture) return;
-    this.arreter();
-    if (etat.grille.length) this.jouer();
+    this.enLecture = false;
+    clearTimeout(this.minuteur);
+    this.surlignages.forEach(clearTimeout);
+    this.surlignages = [];
+    const ctx = this.ctx!;
+    const voix = this.voix!;
+    if (couper) {
+      const maintenant = ctx.currentTime;
+      voix.gain.cancelScheduledValues(maintenant);
+      voix.gain.setValueAtTime(voix.gain.value, maintenant);
+      voix.gain.linearRampToValueAtTime(0, maintenant + 0.03);
+    }
+    // Les oscillateurs déjà lancés s'arrêtent d'eux-mêmes sous deux secondes ;
+    // on débranche leur sortie ensuite, pour ne rien laisser traîner.
+    window.setTimeout(() => voix.disconnect(), 2000);
+    this.voix = null;
+    this.mesureCourante = -1;
+    this.surligner();
+    $('#jouer').innerHTML = ICONE_LECTURE;
   }
 }
 
@@ -236,7 +330,7 @@ function toast(message: string): void {
   minuteurToast = window.setTimeout(() => t.classList.remove('visible'), 2200);
 }
 
-function ajouter(rel: number, q: Etat['grille'][number]['q']): void {
+function ajouter(rel: number, q: Qualite): void {
   if (etat.grille.length >= MAX_MESURES) {
     toast('Seize mesures, c’est déjà une belle grille.');
     return;
@@ -257,6 +351,7 @@ function chargerProgression(index: number): void {
   if (!p) return;
   etat.tonalite = { ...etat.tonalite, mode: p.mode };
   etat.grille = p.pas.map(([rel, q]) => ({ rel, q }));
+  if (p.rythmique) etat.rythmique = p.rythmique;
   toutRendre();
   toast(`${p.nom} chargée en ${nomTonalite(etat.tonalite)}.`);
   const doux = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -286,7 +381,7 @@ $('#grille').addEventListener('click', (e) => {
 document.addEventListener('click', (e) => {
   const cible = e.target as HTMLElement;
   const puce = cible.closest<HTMLElement>('.puce');
-  if (puce) ajouter(Number(puce.dataset.rel), puce.dataset.q as Etat['grille'][number]['q']);
+  if (puce) ajouter(Number(puce.dataset.rel), puce.dataset.q as Qualite);
   const filtre = cible.closest<HTMLElement>('.filtre');
   if (filtre) {
     etat.filtre = filtre.dataset.filtre as Filtre;
@@ -305,12 +400,18 @@ $('#boucle').addEventListener('click', () => {
   rendreGrille();
 });
 
+// Le tempo et la rythmique sont relus par le séquenceur à chaque croche : rien
+// à relancer, le changement s'entend à la croche suivante.
 const curseurTempo = $<HTMLInputElement>('#tempo');
 curseurTempo.addEventListener('input', () => {
   tempo = Number(curseurTempo.value);
   $<HTMLOutputElement>('#tempo-valeur').value = String(tempo);
 });
-curseurTempo.addEventListener('change', () => lecteur.reprendreSiLecture());
+
+$<HTMLSelectElement>('#rythmique').addEventListener('change', (e) => {
+  etat.rythmique = (e.target as HTMLSelectElement).value;
+  $('#motif').innerHTML = htmlMotif(etat.rythmique);
+});
 
 $('#vider').addEventListener('click', () => {
   lecteur.arreter();

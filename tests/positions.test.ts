@@ -14,15 +14,34 @@ test('le doigté de Do est x32010 et sonne Do Mi Sol Do Mi', () => {
 });
 
 test('chaque doigté joue bien les notes de son accord', () => {
-  const INTERVALLES = { maj: [0, 4, 7], min: [0, 3, 7], dim: [0, 3, 6] };
-  for (const q of ['maj', 'min', 'dim'] as const) {
+  const INTERVALLES = { maj: [0, 4, 7], min: [0, 3, 7], dim: [0, 3, 6], dom7: [0, 4, 7, 10] };
+  for (const q of ['maj', 'min', 'dim', 'dom7'] as const) {
     for (let semi = 0; semi < 12; semi++) {
       const t: Tonalite = { tonique: semi, mode: 'maj' };
       const classes = new Set(notesMidi(t, { rel: 0, q }).map((n) => n % 12));
       const attendues = new Set(INTERVALLES[q].map((i) => (semi + i) % 12));
-      assert.deepEqual(classes, attendues, `${q} sur ${semi}`);
+      if (q === 'dom7') {
+        // Une septième ouverte peut omettre la quinte (Do7), jamais la tierce ni la septième.
+        for (const c of classes) assert.ok(attendues.has(c), `${q} sur ${semi} : note étrangère`);
+        for (const i of [0, 4, 10]) {
+          assert.ok(classes.has((semi + i) % 12), `${q} sur ${semi} : il manque l’intervalle ${i}`);
+        }
+      } else {
+        assert.deepEqual(classes, attendues, `${q} sur ${semi}`);
+      }
     }
   }
+});
+
+test('le blues en Mi se joue avec ses trois septièmes ouvertes', () => {
+  const MI: Tonalite = { tonique: 4, mode: 'maj' };
+  const blues = [0, 5, 7].map((rel) => ({ rel, q: 'dom7' as const }));
+  assert.deepEqual(meilleurCapo(MI, blues), {
+    capo: 0,
+    ouverts: 3,
+    total: 3,
+    formes: ['E7', 'A7', 'B7'],
+  });
 });
 
 test('Sol majeur se joue sans capo, Si majeur avec un capo 4', () => {

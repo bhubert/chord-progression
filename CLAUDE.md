@@ -52,12 +52,20 @@ défaut) comme dans le navigateur (`site.ts`, à chaque changement). Ne pas
 fabriquer de HTML ailleurs. Les contenus sont nos tables ou une adresse déjà
 réduite à des entiers : rien à échapper.
 
+### Le séquenceur ne programme que 120 ms d'avance
+
+`Lecteur` dans `site.ts` : un `setTimeout` toutes les 40 ms pose les croches
+qui tombent dans la fenêtre, jamais plus. Le tempo, la rythmique, la tonalité
+et la grille sont relus à chaque croche ; « Arrêter » ferme le nœud `voix` en
+30 ms. Ne pas revenir à un tour programmé d'un coup : c'est ce qui faisait
+que le bouton d'arrêt n'arrêtait rien et que les tempos se superposaient.
+
 ### Les modules de `src/data/` tournent sous Node sans compilation
 
 `node --test` exécute les `.ts` directement (Node 24 retire les types). D'où
 deux contraintes : imports avec extension `.ts` (`allowImportingTsExtensions`
 dans `tsconfig.json`), et aucun accès au DOM dans `theorie.ts`, `positions.ts`,
-`progressions.ts`, `rendu.ts`.
+`progressions.ts`, `rythmiques.ts`, `rendu.ts`.
 
 ## Pièges qui échouent en silence
 

@@ -22,6 +22,7 @@ export const AMBIANCES = [
   'jazz',
   'rétro',
   'sombre',
+  'blues',
 ] as const;
 export type Ambiance = (typeof AMBIANCES)[number];
 
@@ -32,6 +33,8 @@ export interface Progression {
   pas: readonly (readonly [number, Qualite])[];
   ambiances: readonly Ambiance[];
   titres: readonly string[];
+  /** Rythmique à sélectionner au chargement (id de `RYTHMIQUES`). */
+  rythmique?: string;
 }
 
 export const PROGRESSIONS: readonly Progression[] = [
@@ -79,7 +82,7 @@ export const PROGRESSIONS: readonly Progression[] = [
       [5, 'maj'],
       [7, 'maj'],
     ],
-    ambiances: ['rock', 'folk'],
+    ambiances: ['rock', 'folk', 'blues'],
     titres: ['Twist and Shout', 'La Bamba', 'Wild Thing'],
   },
   {
@@ -174,6 +177,69 @@ export const PROGRESSIONS: readonly Progression[] = [
     ],
     ambiances: ['rock', 'sombre'],
     titres: ['All Along the Watchtower', 'Stairway to Heaven, le solo'],
+  },
+  {
+    nom: 'Le blues en douze mesures',
+    mode: 'maj',
+    pas: [
+      [0, 'dom7'],
+      [0, 'dom7'],
+      [0, 'dom7'],
+      [0, 'dom7'],
+      [5, 'dom7'],
+      [5, 'dom7'],
+      [0, 'dom7'],
+      [0, 'dom7'],
+      [7, 'dom7'],
+      [5, 'dom7'],
+      [0, 'dom7'],
+      [7, 'dom7'],
+    ],
+    ambiances: ['blues', 'rock'],
+    titres: ['Johnny B. Goode', 'Hound Dog', 'Rock Around the Clock'],
+    rythmique: 'shuffle',
+  },
+  {
+    nom: 'Le blues, quick change',
+    mode: 'maj',
+    pas: [
+      [0, 'dom7'],
+      [5, 'dom7'],
+      [0, 'dom7'],
+      [0, 'dom7'],
+      [5, 'dom7'],
+      [5, 'dom7'],
+      [0, 'dom7'],
+      [0, 'dom7'],
+      [7, 'dom7'],
+      [5, 'dom7'],
+      [0, 'dom7'],
+      [7, 'dom7'],
+    ],
+    ambiances: ['blues'],
+    titres: ['Sweet Home Chicago', 'Pride and Joy', 'Crossroads'],
+    rythmique: 'shuffle',
+  },
+  {
+    nom: 'Le blues mineur',
+    mode: 'min',
+    pas: [
+      [0, 'min'],
+      [0, 'min'],
+      [0, 'min'],
+      [0, 'min'],
+      [5, 'min'],
+      [5, 'min'],
+      [0, 'min'],
+      [0, 'min'],
+      [8, 'maj'],
+      [7, 'dom7'],
+      [0, 'min'],
+      [7, 'dom7'],
+    ],
+    ambiances: ['blues', 'sombre'],
+    titres: ['The Thrill Is Gone', 'Mr. P.C.', 'Equinox'],
+    rythmique: 'shuffle',
   },
 ];
 

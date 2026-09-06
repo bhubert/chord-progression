@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { AMBIANCES, PROGRESSIONS, SUITES } from '../src/data/progressions.ts';
+import { RYTHMIQUES } from '../src/data/rythmiques.ts';
 
 test('chaque progression a des pas valides, une ambiance connue et un titre', () => {
   const noms = new Set<string>();
@@ -8,11 +9,17 @@ test('chaque progression a des pas valides, une ambiance connue et un titre', ()
     assert.ok(p.pas.length >= 2 && p.pas.length <= 16, p.nom);
     for (const [rel, q] of p.pas) {
       assert.ok(Number.isInteger(rel) && rel >= 0 && rel < 12, `${p.nom} : intervalle ${rel}`);
-      assert.ok(['maj', 'min', 'dim'].includes(q), `${p.nom} : qualité ${q}`);
+      assert.ok(['maj', 'min', 'dim', 'dom7'].includes(q), `${p.nom} : qualité ${q}`);
     }
     assert.ok(p.ambiances.length >= 1, p.nom);
     for (const a of p.ambiances) assert.ok(AMBIANCES.includes(a), `${p.nom} : ambiance ${a}`);
     assert.ok(p.titres.length >= 1, p.nom);
+    if (p.rythmique) {
+      assert.ok(
+        RYTHMIQUES.some((r) => r.id === p.rythmique),
+        `${p.nom} : rythmique inconnue ${p.rythmique}`,
+      );
+    }
     assert.ok(!noms.has(p.nom), `doublon : ${p.nom}`);
     noms.add(p.nom);
   }

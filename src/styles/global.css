@@ -1,7 +1,8 @@
 /*
  * Un seul thème, « palissandre » : fond bois sombre, texte ivoire, laiton pour
  * ce qui se clique ou qui joue. Les accords mineurs sont bleutés, les
- * diminués mauves : la couleur dit la qualité, pas l'humeur.
+ * diminués mauves, les septièmes cuivrées : la couleur dit la qualité, pas
+ * l'humeur.
  *
  * Pas de bloc `prefers-color-scheme` : c'est un choix, le site s'affiche
  * pareil partout. Un thème clair « érable » reste possible plus tard, en
@@ -21,6 +22,7 @@
   --laiton-2: #f1cb7a;
   --mineur: #91b4c8;
   --dim: #c39bb4;
+  --septieme: #e2a97c;
   --police-titre: 'Gloock', Georgia, 'Times New Roman', serif;
   --police-ui: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --police-accord: 'Barlow Semi Condensed', 'Arial Narrow', Arial, sans-serif;
@@ -239,6 +241,9 @@ a {
 .accord.dim {
   color: var(--dim);
 }
+.accord.dom7 {
+  color: var(--septieme);
+}
 .degre {
   font: 500 13px/1 var(--police-ui);
   color: var(--ivoire-3);
@@ -346,6 +351,29 @@ a {
   min-width: 2.2em;
   font-variant-numeric: tabular-nums;
 }
+.reglage-rythmique {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ivoire-2);
+  font-size: 14px;
+  margin-left: 8px;
+}
+.select-petit {
+  min-width: 0;
+  padding: 6px 30px 6px 10px;
+  font-size: 14px;
+}
+/* Le motif de la rythmique en flèches : ↓ · ↓ ↑ · ↑ ↓ ↑ */
+.motif {
+  font: 500 15px var(--police-accord);
+  color: var(--ivoire-2);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+.motif .doux {
+  opacity: 0.45;
+}
 .pousse {
   margin-left: auto;
 }
@@ -434,6 +462,9 @@ a {
 .pastille.dim {
   background: var(--dim);
 }
+.pastille.dom7 {
+  background: var(--septieme);
+}
 
 .diagrammes {
   display: flex;
@@ -460,6 +491,9 @@ a {
 }
 .diagramme .nom.dim {
   color: var(--dim);
+}
+.diagramme .nom.dom7 {
+  color: var(--septieme);
 }
 .capo {
   margin-top: 20px;

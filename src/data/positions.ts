@@ -2,9 +2,8 @@
  * Positions sur le manche : doigtés de référence, diagrammes, capo.
  *
  * Un seul doigté par accord, le plus courant : ouvert quand il existe, barré
- * en forme de Mi ou de La sinon. Les variantes viendront avec les accords de
- * septième ; pour l'instant la page répond à « comment je le joue ? » d'un
- * seul dessin.
+ * en forme de Mi ou de La sinon. La page répond à « comment je le joue ? »
+ * d'un seul dessin ; les variantes attendront.
  */
 
 import {
@@ -64,6 +63,20 @@ export const POSITIONS: Record<Qualite, readonly string[]> = {
     'x1232x',
     'x2343x',
   ],
+  dom7: [
+    'x32310',
+    'x46464',
+    'xx0212',
+    'x68686',
+    '020100',
+    '131211',
+    '242322',
+    '320001',
+    '464544',
+    'x02020',
+    'x13131',
+    'x21202',
+  ],
 };
 
 /** Classes de hauteur des cordes à vide (Mi La Ré Sol Si Mi). */
@@ -71,8 +84,15 @@ export const PC_CORDES = [4, 9, 2, 7, 11, 4] as const;
 /** Les mêmes, en numéros MIDI (Mi2 = 40). */
 export const MIDI_CORDES = [40, 45, 50, 55, 59, 64] as const;
 
-/** Formes ouvertes : Do Ré Mi Sol La, Rém Mim Lam. Clé = qualité + classe de hauteur. */
-const OUVERTS = new Set(['maj0', 'maj2', 'maj4', 'maj7', 'maj9', 'min2', 'min4', 'min9']);
+/**
+ * Formes ouvertes : Do Ré Mi Sol La, Rém Mim Lam, et les septièmes Do7 Ré7
+ * Mi7 Sol7 La7 Si7. Clé = qualité + classe de hauteur.
+ */
+const OUVERTS = new Set([
+  ...['maj0', 'maj2', 'maj4', 'maj7', 'maj9'],
+  ...['min2', 'min4', 'min9'],
+  ...['dom70', 'dom72', 'dom74', 'dom77', 'dom79', 'dom711'],
+]);
 
 /** Doigté d'un accord dans une tonalité : six valeurs, -1 pour une corde étouffée. */
 export const doigte = (t: Tonalite, a: Accord): number[] =>
