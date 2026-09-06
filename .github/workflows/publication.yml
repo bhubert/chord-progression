@@ -54,7 +54,7 @@ jobs:
         # exacte sans repli, et ajouter un paquet de 20 Ko invalide alors tout.
         # Avec `restore-keys`, une clé manquante retombe sur le cache le plus
         # récent, et `npm ci` ne télécharge que la différence.
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.npm
           key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
