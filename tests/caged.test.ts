@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   FORMES,
   FRETTES_MANCHE,
+  boitePenta,
   descriptionAncre,
   forme,
   nomsPenta,
@@ -147,4 +148,70 @@ test('la pentatonique majeure de Sol a les notes de la mineure de Mi, et couvre 
   const compte = (svg: string) => (svg.match(/>A<\/text>/g) ?? []).length;
   assert.equal(compte(svgManche(SOL, { rel: 0, q: 'maj' }, null)), 1);
   assert.ok(compte(svgManche(SOL, { rel: 0, q: 'maj' }, null, 'maj')) >= 7);
+});
+
+test('avec une forme, la pentatonique se limite à sa boîte : deux notes par corde, autour de la forme', () => {
+  for (const q of ['maj', 'min', 'dom7'] as const) {
+    for (const f of FORMES[q]) {
+      for (let semi = 0; semi < 12; semi++) {
+        for (const penta of ['maj', 'min'] as const) {
+          const t: Tonalite = { tonique: semi, mode: 'maj' };
+          const p = placer(t, { rel: 0, q }, f);
+          const posees = p.frettes.filter((x): x is number => x !== null);
+          const bas = Math.min(...posees);
+          const haut = Math.max(...posees);
+          const boite = boitePenta(t, { rel: 0, q }, penta, p);
+          assert.equal(boite.length, 12, `${q} ${f.lettre} sur ${semi}, penta ${penta}`);
+          for (let corde = 0; corde < 6; corde++) {
+            const notes = boite.filter(([c]) => c === corde);
+            assert.equal(notes.length, 2, `${q} ${f.lettre} sur ${semi} : corde ${corde}`);
+            for (const [, frette] of notes) {
+              assert.ok(
+                frette >= bas - 3 && frette <= haut + 3,
+                `${q} ${f.lettre} sur ${semi} : case ${frette} loin de ${bas}-${haut}`,
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+  // Les deux boîtes d'école, forme de Mi en Sol : majeure cases 2 à 5, mineure cases 3 à 6.
+  const E = placer(SOL, { rel: 0, q: 'maj' }, forme('maj', 'E')!);
+  const cases = (penta: 'maj' | 'min') =>
+    boitePenta(SOL, { rel: 0, q: 'maj' }, penta, E).map(([c, f]) => [c, f]);
+  assert.deepEqual(cases('maj'), [
+    [0, 3],
+    [0, 5],
+    [1, 2],
+    [1, 5],
+    [2, 2],
+    [2, 5],
+    [3, 2],
+    [3, 4],
+    [4, 3],
+    [4, 5],
+    [5, 3],
+    [5, 5],
+  ]);
+  assert.deepEqual(cases('min'), [
+    [0, 3],
+    [0, 6],
+    [1, 3],
+    [1, 5],
+    [2, 3],
+    [2, 5],
+    [3, 3],
+    [3, 5],
+    [4, 3],
+    [4, 6],
+    [5, 3],
+    [5, 6],
+  ]);
+  // Sans forme, toute la gamme ; avec, douze notes seulement.
+  const avecForme = svgManche(SOL, { rel: 0, q: 'maj' }, E, 'maj');
+  const sansForme = svgManche(SOL, { rel: 0, q: 'maj' }, null, 'maj');
+  const points = (svg: string) =>
+    (svg.match(/stroke="var\(--ivoire-3\)" stroke-width="1"\/>/g) ?? []).length;
+  assert.ok(points(sansForme) > points(avecForme));
 });

@@ -170,6 +170,41 @@ export function notesPenta(t: Tonalite, a: Accord, penta: Penta): [number, numbe
   return resultat;
 }
 
+/**
+ * La boîte de pentatonique que découpe une forme : sur chaque corde, les deux
+ * notes de la gamme les plus proches des cases de la forme, cordes étouffées
+ * comprises. C'est ce que tout guitariste appelle « la position » : cinq
+ * formes, cinq boîtes, et la gamme entière quand on les met bout à bout.
+ */
+export function boitePenta(
+  t: Tonalite,
+  a: Accord,
+  penta: Penta,
+  p: Placement,
+): [number, number, number][] {
+  const posees = p.frettes.filter((f): f is number => f !== null);
+  const bas = Math.min(...posees);
+  const haut = Math.max(...posees);
+  const centre = (bas + haut) / 2;
+  const distance = (f: number) => (f < bas ? bas - f : f > haut ? f - haut : 0);
+  const toutes = notesPenta(t, a, penta);
+  const resultat: [number, number, number][] = [];
+  for (let corde = 0; corde < 6; corde++) {
+    const surCorde = toutes
+      .filter(([c]) => c === corde)
+      .sort(
+        (x, y) =>
+          distance(x[1]) - distance(y[1]) ||
+          Math.abs(x[1] - centre) - Math.abs(y[1] - centre) ||
+          x[1] - y[1],
+      )
+      .slice(0, 2)
+      .sort((x, y) => x[1] - y[1]);
+    resultat.push(...surCorde);
+  }
+  return resultat;
+}
+
 // ── Le dessin ──────────────────────────────────────────────────────────────
 
 const X0 = 46; // le sillet
@@ -185,7 +220,7 @@ const REPERES = [3, 5, 7, 9, 12, 15];
  * regarde sa propre guitare. Sans placement : toutes les racines, nommées.
  * Avec : la forme posée, ses racines en laiton et la première cerclée.
  * Avec une pentatonique : ses notes en fond, nommées, les racines cerclées
- * d'or ; la forme vient par-dessus.
+ * d'or. Toute la gamme sans forme ; la seule boîte de la forme avec.
  */
 export function svgManche(
   t: Tonalite,
@@ -221,7 +256,8 @@ export function svgManche(
   }
   if (penta) {
     const prefGamme = prefPenta(t, a, penta);
-    for (const [corde, f, classe] of notesPenta(t, a, penta)) {
+    const notes = p ? boitePenta(t, a, penta, p) : notesPenta(t, a, penta);
+    for (const [corde, f, classe] of notes) {
       const estRacine = classe === racine;
       if (estRacine && !p) continue; // dessinée en grand juste après
       s += `<circle cx="${xCase(f)}" cy="${y(corde)}" r="8" fill="var(--bois-3)" stroke="var(${estRacine ? '--laiton' : '--ivoire-3'})" stroke-width="${estRacine ? 1.8 : 1}"/>`;

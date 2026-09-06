@@ -301,7 +301,7 @@ export function htmlManche(etat: Etat): string {
   }
   if (penta) {
     const relative = relativePenta(t, a, penta);
-    phrase += ` <b>Pentatonique ${NOMS_PENTA[penta]} de ${racine(t, a)}</b> : ${nomsPenta(t, a, penta).join(', ')}. Ce sont les mêmes notes que la pentatonique ${NOMS_PENTA[relative.penta]} de ${relative.nom}.`;
+    phrase += ` <b>Pentatonique ${NOMS_PENTA[penta]} de ${racine(t, a)}</b> : ${nomsPenta(t, a, penta).join(', ')}. Ce sont les mêmes notes que la pentatonique ${NOMS_PENTA[relative.penta]} de ${relative.nom}.${p ? ' Ici, seulement la boîte de la forme : deux notes par corde.' : ''}`;
   }
   return `<div class="manche-choix"><div class="choix-groupe" role="group" aria-label="Accord regardé">${choix}</div>${reglagePenta}</div>
 <div class="manche-defile">${svgManche(t, a, p, penta)}</div>
