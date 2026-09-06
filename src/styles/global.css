@@ -523,8 +523,17 @@ a {
 .manche-choix {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  gap: 12px 24px;
   margin-bottom: 14px;
+}
+.choix-groupe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.penta-reglage {
+  margin-left: auto;
 }
 .choix {
   padding: 6px 12px;

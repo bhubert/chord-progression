@@ -18,6 +18,7 @@
 
 import { MIDI_CORDES, PC_CORDES } from './positions.ts';
 import {
+  PREF,
   mod12,
   nomNote,
   prefPour,
@@ -118,6 +119,57 @@ export const descriptionAncre = (p: Placement): string =>
 export const notesPlacement = (p: Placement): number[] =>
   p.frettes.flatMap((f, i) => (f === null ? [] : [MIDI_CORDES[i]! + f]));
 
+// ── Pentatoniques ──────────────────────────────────────────────────────────
+//
+// Cinq notes, et chaque forme du CAGED en est une « boîte ». La majeure et la
+// mineure relative ont les mêmes notes : Sol majeur et Mi mineur, c'est le
+// même dessin sur le manche, seule la racine change de place.
+
+export type Penta = 'maj' | 'min';
+
+export const PENTATONIQUES: Record<Penta, readonly number[]> = {
+  maj: [0, 2, 4, 7, 9],
+  min: [0, 3, 5, 7, 10],
+};
+
+export const NOMS_PENTA: Record<Penta, string> = { maj: 'majeure', min: 'mineure' };
+
+/**
+ * L'orthographe d'une gamme suit sa tonalité majeure, relative pour la
+ * mineure : Sol mineur s'écrit avec les bémols de Sib majeur (G, Bb, C, D, F),
+ * pas avec les dièses de l'accord de Sol.
+ */
+const prefPenta = (t: Tonalite, a: Accord, penta: Penta) =>
+  PREF.maj[mod12(semiAbsolu(t, a) + (penta === 'min' ? 3 : 0))]!;
+
+/** Les cinq notes, nommées : « G, A, B, D, E ». */
+export const nomsPenta = (t: Tonalite, a: Accord, penta: Penta): string[] =>
+  PENTATONIQUES[penta].map((i) => nomNote(semiAbsolu(t, a) + i, prefPenta(t, a, penta)));
+
+/** La relative : Sol majeur et Mi mineur partagent leurs cinq notes. */
+export const relativePenta = (
+  t: Tonalite,
+  a: Accord,
+  penta: Penta,
+): { nom: string; penta: Penta } => ({
+  nom: nomNote(semiAbsolu(t, a) + (penta === 'maj' ? 9 : 3), prefPenta(t, a, penta)),
+  penta: penta === 'maj' ? 'min' : 'maj',
+});
+
+/** Toutes les notes de la gamme sur le manche : `[corde, case, classe de hauteur]`. */
+export function notesPenta(t: Tonalite, a: Accord, penta: Penta): [number, number, number][] {
+  const racine = semiAbsolu(t, a);
+  const classes = new Set(PENTATONIQUES[penta].map((i) => mod12(racine + i)));
+  const resultat: [number, number, number][] = [];
+  for (let corde = 0; corde < 6; corde++) {
+    for (let f = 0; f <= FRETTES_MANCHE; f++) {
+      const classe = mod12(PC_CORDES[corde]! + f);
+      if (classes.has(classe)) resultat.push([corde, f, classe]);
+    }
+  }
+  return resultat;
+}
+
 // ── Le dessin ──────────────────────────────────────────────────────────────
 
 const X0 = 46; // le sillet
@@ -132,10 +184,18 @@ const REPERES = [3, 5, 7, 9, 12, 15];
  * Le manche, à plat, chanterelle en haut et Mi grave en bas, comme quand on
  * regarde sa propre guitare. Sans placement : toutes les racines, nommées.
  * Avec : la forme posée, ses racines en laiton et la première cerclée.
+ * Avec une pentatonique : ses notes en fond, nommées, les racines cerclées
+ * d'or ; la forme vient par-dessus.
  */
-export function svgManche(t: Tonalite, a: Accord, p: Placement | null): string {
+export function svgManche(
+  t: Tonalite,
+  a: Accord,
+  p: Placement | null,
+  penta: Penta | null = null,
+): string {
   const racine = semiAbsolu(t, a);
-  const nom = nomNote(racine, prefPour(t, a));
+  const pref = prefPour(t, a);
+  const nom = nomNote(racine, pref);
   const largeur = X0 + FRETTES_MANCHE * PAS + 18;
   const hauteur = y(0) + 40;
   const haut = y(5) - 11;
@@ -158,6 +218,15 @@ export function svgManche(t: Tonalite, a: Accord, p: Placement | null): string {
   for (let corde = 0; corde < 6; corde++) {
     s += `<line x1="${X0 - 4}" y1="${y(corde)}" x2="${X0 + FRETTES_MANCHE * PAS}" y2="${y(corde)}" stroke="var(--ivoire-3)" stroke-width="${(0.8 + (5 - corde) * 0.3).toFixed(1)}"/>`;
     s += `<text x="12" y="${y(corde) + 4}" font-size="11" fill="var(--ivoire-3)" text-anchor="middle">${LETTRES_CORDES[corde]}</text>`;
+  }
+  if (penta) {
+    const prefGamme = prefPenta(t, a, penta);
+    for (const [corde, f, classe] of notesPenta(t, a, penta)) {
+      const estRacine = classe === racine;
+      if (estRacine && !p) continue; // dessinée en grand juste après
+      s += `<circle cx="${xCase(f)}" cy="${y(corde)}" r="8" fill="var(--bois-3)" stroke="var(${estRacine ? '--laiton' : '--ivoire-3'})" stroke-width="${estRacine ? 1.8 : 1}"/>`;
+      s += `<text x="${xCase(f)}" y="${y(corde) + 3.2}" font-size="9" font-weight="500" fill="var(${estRacine ? '--laiton' : '--ivoire-2'})" text-anchor="middle">${nomNote(classe, prefGamme)}</text>`;
+    }
   }
   if (!p) {
     for (const [corde, f] of racines(t, a)) {

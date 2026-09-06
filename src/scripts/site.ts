@@ -37,7 +37,7 @@ import {
 import { notesMidi } from '../data/positions.ts';
 import { PROGRESSIONS } from '../data/progressions.ts';
 import { dureesCroches, rythmique as rythmiqueParId } from '../data/rythmiques.ts';
-import { notesPlacement, type Lettre } from '../data/caged.ts';
+import { notesPlacement, type Lettre, type Penta } from '../data/caged.ts';
 import {
   MAX_MESURES,
   etatInitial,
@@ -425,6 +425,11 @@ document.addEventListener('click', (e) => {
       rel: Number(choix.dataset.mancheRel),
       q: choix.dataset.mancheQ as Qualite,
     };
+    rendreManche();
+  }
+  const penta = cible.closest<HTMLElement>('[data-penta]');
+  if (penta) {
+    etat.manche.penta = penta.dataset.penta === 'non' ? null : (penta.dataset.penta as Penta);
     rendreManche();
   }
   const formeChoisie = cible.closest<HTMLElement>('.forme');

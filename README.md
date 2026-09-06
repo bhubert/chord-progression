@@ -28,7 +28,10 @@ Site : <https://grille-accords.pages.dev>
   cases, et les cinq formes du CAGED (Do, La, Sol, Mi, Ré) avec, pour chacune,
   la corde et la case où poser la première racine. Cliquer une forme la dessine
   sur le manche, cercle cette première racine et la fait sonner. En mineur,
-  trois formes ; pour un diminué, les racines seulement.
+  trois formes ; pour un diminué, les racines seulement. La pentatonique,
+  majeure ou mineure, se dessine par-dessus avec ses cinq notes nommées : on
+  voit la boîte que chaque forme découpe, et la relative qui partage les
+  mêmes notes.
 - **Les septièmes.** Sous les accords de la tonalité, les trois septièmes de
   dominante du blues (I7, IV7, V7), avec leurs doigtés ouverts.
 - **Le lien.** L'adresse décrit la grille en clair, `#sol-majeur/I-V-vi-IV` :

@@ -32,11 +32,15 @@ import { RYTHMIQUES, RYTHMIQUE_DEFAUT, rythmique as rythmiqueParId } from './ryt
 import {
   FORMES,
   NOMS_FORMES,
+  NOMS_PENTA,
   descriptionAncre,
   forme,
+  nomsPenta,
   placer,
+  relativePenta,
   svgManche,
   type Lettre,
+  type Penta,
   type Placement,
 } from './caged.ts';
 
@@ -50,7 +54,7 @@ export interface Etat {
   /** Id d'une entrée de `RYTHMIQUES`. */
   rythmique: string;
   /** Le manche : l'accord regardé (sinon le premier de la grille) et la forme posée (sinon les racines). */
-  manche: { accord: Accord | null; forme: Lettre | null };
+  manche: { accord: Accord | null; forme: Lettre | null; penta: Penta | null };
 }
 
 export const MAX_MESURES = 16;
@@ -63,7 +67,7 @@ export const etatInitial = (): Etat => ({
   boucle: true,
   filtre: 'toutes',
   rythmique: RYTHMIQUE_DEFAUT,
-  manche: { accord: null, forme: null },
+  manche: { accord: null, forme: null, penta: null },
 });
 
 const majuscule = (s: string) => s[0]!.toUpperCase() + s.slice(1);
@@ -274,6 +278,19 @@ export function htmlManche(etat: Etat): string {
     })
     .join('');
   const toutes = `<button type="button" class="forme" data-forme="racines" aria-pressed="${p === null}"><span class="lettre">●</span><span class="ou">Toutes les racines<br>de ${nomAccord(t, a)} sur le manche</span></button>`;
+  const penta = etat.manche.penta;
+  const reglagePenta = `<div class="reglage penta-reglage">Pentatonique<div class="segments" role="group" aria-label="Pentatonique">${(
+    [
+      [null, 'Sans'],
+      ['maj', 'Majeure'],
+      ['min', 'Mineure'],
+    ] as const
+  )
+    .map(
+      ([v, libelle]) =>
+        `<button type="button" data-penta="${v ?? 'non'}" aria-pressed="${penta === v}">${libelle}</button>`,
+    )
+    .join('')}</div></div>`;
   let phrase: string;
   if (p) {
     phrase = `<b>${NOMS_FORMES[p.forme.lettre][0]!.toUpperCase()}${NOMS_FORMES[p.forme.lettre].slice(1)} pour ${nomAccord(t, a)}</b> : posez la première racine sur la ${descriptionAncre(p)}, le reste de la forme suit. Sur le manche, l’anneau la marque, et les points dorés sont les autres racines.`;
@@ -282,8 +299,12 @@ export function htmlManche(etat: Etat): string {
   } else {
     phrase = `Les racines de <b>${nomAccord(t, a)}</b> sur tout le manche. Choisissez une forme pour voir où la poser${a.q === 'min' ? '. En mineur, trois formes suffisent : Mi, La et Ré' : ''}.`;
   }
-  return `<div class="manche-choix" role="group" aria-label="Accord regardé">${choix}</div>
-<div class="manche-defile">${svgManche(t, a, p)}</div>
+  if (penta) {
+    const relative = relativePenta(t, a, penta);
+    phrase += ` <b>Pentatonique ${NOMS_PENTA[penta]} de ${racine(t, a)}</b> : ${nomsPenta(t, a, penta).join(', ')}. Ce sont les mêmes notes que la pentatonique ${NOMS_PENTA[relative.penta]} de ${relative.nom}.`;
+  }
+  return `<div class="manche-choix"><div class="choix-groupe" role="group" aria-label="Accord regardé">${choix}</div>${reglagePenta}</div>
+<div class="manche-defile">${svgManche(t, a, p, penta)}</div>
 <div class="formes" role="group" aria-label="Forme">${toutes}${formes}</div>
 <p class="manche-phrase">${phrase}</p>`;
 }

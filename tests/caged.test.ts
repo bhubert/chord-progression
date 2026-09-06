@@ -5,9 +5,12 @@ import {
   FRETTES_MANCHE,
   descriptionAncre,
   forme,
+  nomsPenta,
+  notesPenta,
   notesPlacement,
   placer,
   racines,
+  relativePenta,
   svgManche,
 } from '../src/data/caged.ts';
 import { PC_CORDES } from '../src/data/positions.ts';
@@ -117,4 +120,31 @@ test('le dessin nomme les racines sans forme, et cercle la première avec une fo
     placer(SOL, { rel: 0, q: 'maj' }, forme('maj', 'E')!),
   );
   assert.match(avec, /r="13"/);
+});
+
+test('la pentatonique majeure de Sol a les notes de la mineure de Mi, et couvre le manche', () => {
+  assert.deepEqual(nomsPenta(SOL, { rel: 0, q: 'maj' }, 'maj'), ['G', 'A', 'B', 'D', 'E']);
+  assert.deepEqual(nomsPenta(SOL, { rel: 9, q: 'min' }, 'min'), ['E', 'G', 'A', 'B', 'D']);
+  assert.deepEqual(relativePenta(SOL, { rel: 0, q: 'maj' }, 'maj'), { nom: 'E', penta: 'min' });
+  assert.deepEqual(relativePenta(SOL, { rel: 9, q: 'min' }, 'min'), { nom: 'G', penta: 'maj' });
+  // La mineure de Sol s'écrit avec les bémols de Sib majeur, sa relative.
+  assert.deepEqual(nomsPenta(SOL, { rel: 0, q: 'maj' }, 'min'), ['G', 'Bb', 'C', 'D', 'F']);
+  assert.deepEqual(relativePenta(SOL, { rel: 0, q: 'maj' }, 'min'), { nom: 'Bb', penta: 'maj' });
+  const FA: Tonalite = { tonique: 5, mode: 'maj' };
+  assert.deepEqual(nomsPenta(FA, { rel: 0, q: 'maj' }, 'maj'), ['F', 'G', 'A', 'C', 'D']);
+  assert.deepEqual(nomsPenta(FA, { rel: 0, q: 'maj' }, 'min'), ['F', 'Ab', 'Bb', 'C', 'Eb']);
+  const notes = notesPenta(SOL, { rel: 0, q: 'maj' }, 'maj');
+  const classes = new Set(notes.map(([, , c]) => c));
+  assert.deepEqual(
+    [...classes].sort((a, b) => a - b),
+    [2, 4, 7, 9, 11],
+  );
+  for (let corde = 0; corde < 6; corde++) {
+    assert.ok(notes.filter(([c]) => c === corde).length >= 6, `corde ${corde}`);
+  }
+  // « A » apparaît une fois sans pentatonique (la lettre de la corde de La),
+  // et sur chaque corde une ou deux fois de plus avec.
+  const compte = (svg: string) => (svg.match(/>A<\/text>/g) ?? []).length;
+  assert.equal(compte(svgManche(SOL, { rel: 0, q: 'maj' }, null)), 1);
+  assert.ok(compte(svgManche(SOL, { rel: 0, q: 'maj' }, null, 'maj')) >= 7);
 });
