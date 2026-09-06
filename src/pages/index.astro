@@ -107,8 +107,25 @@ const etat = etatInitial();
         <section class="bloc" aria-labelledby="titre-tonalite">
           <div class="bloc-entete">
             <h2 id="titre-tonalite">{htmlTitreTonalite(etat.tonalite)}</h2>
+            <div class="reglage">
+              Degrés
+              <div class="segments" role="group" aria-label="Écriture des degrés">
+                <button
+                  type="button"
+                  data-chiffrage="casse"
+                  aria-pressed="true"
+                  title="La casse dit la qualité : I majeur, vi mineur">I, vi</button
+                >
+                <button
+                  type="button"
+                  data-chiffrage="majuscules"
+                  aria-pressed="false"
+                  title="Chiffrage classique, tout en majuscules">I, VI</button
+                >
+              </div>
+            </div>
           </div>
-          <div class="puces" id="diatoniques" set:html={htmlDiatoniques(etat.tonalite)} />
+          <div class="puces" id="diatoniques" set:html={htmlDiatoniques(etat)} />
           <div class="apres" id="blues" set:html={htmlBlues(etat)} />
           <div class="apres" id="apres" set:html={htmlApres(etat)} />
           <p class="legende">

@@ -32,6 +32,7 @@ import {
   lireAdresse,
   nomTonalite,
   transposerMode,
+  type Chiffrage,
   type Mode,
   type Qualite,
 } from '../data/theorie.ts';
@@ -87,7 +88,7 @@ function rendreGrille(): void {
 }
 
 function rendreTonalite(): void {
-  $('#diatoniques').innerHTML = htmlDiatoniques(etat.tonalite);
+  $('#diatoniques').innerHTML = htmlDiatoniques(etat);
   $('#blues').innerHTML = htmlBlues(etat);
   $('#apres').innerHTML = htmlApres(etat);
 }
@@ -528,6 +529,31 @@ $('#theme').addEventListener('click', () => {
   }
 });
 
+// ── Écriture des degrés ────────────────────────────────────────────────────
+
+const CLE_CHIFFRAGE = 'chiffrage';
+
+function appliquerChiffrage(chiffrage: Chiffrage): void {
+  etat.chiffrage = chiffrage;
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-chiffrage]')
+    .forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.chiffrage === chiffrage)));
+}
+
+document.querySelectorAll<HTMLButtonElement>('[data-chiffrage]').forEach((b) =>
+  b.addEventListener('click', () => {
+    appliquerChiffrage(b.dataset.chiffrage as Chiffrage);
+    rendreGrille();
+    rendreTonalite();
+    rendreProgressions();
+    try {
+      localStorage.setItem(CLE_CHIFFRAGE, etat.chiffrage);
+    } catch {
+      // Stockage refusé : le choix vaut pour la page.
+    }
+  }),
+);
+
 // ── Départ ─────────────────────────────────────────────────────────────────
 
 const depuisAdresse = lireAdresse(location.hash);
@@ -535,10 +561,18 @@ if (depuisAdresse) {
   etat.tonalite = depuisAdresse.tonalite;
   etat.grille = depuisAdresse.grille.slice(0, MAX_MESURES);
 }
+let chiffrageMemorise: string | null = null;
+try {
+  chiffrageMemorise = localStorage.getItem(CLE_CHIFFRAGE);
+} catch {
+  chiffrageMemorise = null;
+}
+if (chiffrageMemorise === 'majuscules') appliquerChiffrage('majuscules');
+
 // La page est déjà rendue au build dans l'état par défaut ; on ne la
-// reconstruit que si l'adresse en demande un autre. Sinon, seuls les états
-// dynamiques (boucle, adresse) sont posés.
-if (depuisAdresse) toutRendre();
+// reconstruit que si l'adresse ou un réglage mémorisé en demande un autre.
+// Sinon, seuls les états dynamiques (boucle, adresse) sont posés.
+if (depuisAdresse || etat.chiffrage !== 'casse') toutRendre();
 else {
   $('#cadre').classList.add('boucle');
   ecrireAdresse();

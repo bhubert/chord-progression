@@ -23,6 +23,7 @@ import {
   racine,
   uniques,
   type Accord,
+  type Chiffrage,
   type Tonalite,
 } from './theorie.ts';
 import { meilleurCapo, svgDiagramme } from './positions.ts';
@@ -54,6 +55,8 @@ export interface Etat {
   filtre: Filtre;
   /** Id d'une entrée de `RYTHMIQUES`. */
   rythmique: string;
+  /** Casse des degrés : « I, vi » ou « I, VI ». */
+  chiffrage: Chiffrage;
   /** Le manche : l'accord regardé (sinon le premier de la grille) et la forme posée (sinon les racines). */
   manche: { accord: Accord | null; forme: Lettre | null; penta: Penta | null };
 }
@@ -68,6 +71,7 @@ export const etatInitial = (): Etat => ({
   boucle: true,
   filtre: 'toutes',
   rythmique: RYTHMIQUE_DEFAUT,
+  chiffrage: 'casse',
   manche: { accord: null, forme: null, penta: null },
 });
 
@@ -77,8 +81,8 @@ const majuscule = (s: string) => s[0]!.toUpperCase() + s.slice(1);
 export const htmlAccord = (t: Tonalite, a: Accord): string =>
   `<span class="accord ${a.q}"><span class="racine">${racine(t, a)}</span><span class="suffixe">${SUFFIXE[a.q]}</span></span>`;
 
-const htmlPuce = (t: Tonalite, a: Accord, petite = false): string =>
-  `<button type="button" class="puce${petite ? ' petite' : ''}" data-rel="${a.rel}" data-q="${a.q}" aria-label="Ajouter ${nomAccord(t, a)}">${htmlAccord(t, a)}<span class="degre">${chiffre(a, t.mode)}</span></button>`;
+const htmlPuce = (t: Tonalite, a: Accord, chiffrage: Chiffrage, petite = false): string =>
+  `<button type="button" class="puce${petite ? ' petite' : ''}" data-rel="${a.rel}" data-q="${a.q}" aria-label="Ajouter ${nomAccord(t, a)}">${htmlAccord(t, a)}<span class="degre">${chiffre(a, t.mode, chiffrage)}</span></button>`;
 
 /**
  * Les douze toniques du menu, épelées selon le mode (Réb en majeur, Do# en
@@ -103,10 +107,10 @@ export const htmlOptionsTonique = (t: Tonalite): string =>
     .map((o) => `<option value="${o.valeur}"${o.choisie ? ' selected' : ''}>${o.libelle}</option>`)
     .join('');
 
-export function htmlGrille({ tonalite: t, grille }: Etat): string {
+export function htmlGrille({ tonalite: t, grille, chiffrage }: Etat): string {
   const cellules = grille.map(
     (a, i) =>
-      `<button type="button" class="mesure" data-i="${i}" aria-label="Retirer ${nomAccord(t, a)}, mesure ${i + 1}">${htmlAccord(t, a)}<span class="degre">${chiffre(a, t.mode)}</span><span class="retirer" aria-hidden="true">×</span></button>`,
+      `<button type="button" class="mesure" data-i="${i}" aria-label="Retirer ${nomAccord(t, a)}, mesure ${i + 1}">${htmlAccord(t, a)}<span class="degre">${chiffre(a, t.mode, chiffrage)}</span><span class="retirer" aria-hidden="true">×</span></button>`,
   );
   if (grille.length < MAX_MESURES) {
     const vide = grille.length === 0;
@@ -129,16 +133,16 @@ export function htmlGrille({ tonalite: t, grille }: Etat): string {
 
 export const htmlTitreTonalite = (t: Tonalite): string => `Accords de ${nomTonalite(t)}`;
 
-export const htmlDiatoniques = (t: Tonalite): string =>
+export const htmlDiatoniques = ({ tonalite: t, chiffrage }: Etat): string =>
   diatoniques(t.mode)
-    .map((a) => htmlPuce(t, a))
+    .map((a) => htmlPuce(t, a, chiffrage))
     .join('');
 
 /**
  * Les trois septièmes du blues, en majeur seulement : I7, IV7, V7, et le
  * bouton qui bascule toute la grille entre accords purs et septièmes.
  */
-export function htmlBlues({ tonalite: t, grille }: Etat): string {
+export function htmlBlues({ tonalite: t, grille, chiffrage }: Etat): string {
   if (t.mode !== 'maj') return '';
   const septiemes: Accord[] = [0, 5, 7].map((rel) => ({ rel, q: 'dom7' }));
   const enSeptiemes = grille.some((a) => a.q === 'dom7' && [0, 5, 7].includes(a.rel));
@@ -150,13 +154,13 @@ export function htmlBlues({ tonalite: t, grille }: Etat): string {
     : '';
   return (
     '<span>Pour un blues, les trois septièmes :</span>' +
-    septiemes.map((a) => htmlPuce(t, a, true)).join('') +
+    septiemes.map((a) => htmlPuce(t, a, chiffrage, true)).join('') +
     bouton
   );
 }
 
 /** « Souvent après Do : Ré, Sol, Lam ». Vide quand la grille l'est. */
-export function htmlApres({ tonalite: t, grille }: Etat): string {
+export function htmlApres({ tonalite: t, grille, chiffrage }: Etat): string {
   const dernier = grille[grille.length - 1];
   if (!dernier) return '';
   // Un accord hors gamme (une septième de blues, un emprunt) est rapproché du
@@ -167,7 +171,7 @@ export function htmlApres({ tonalite: t, grille }: Etat): string {
   const suivants = degre >= 0 ? SUITES[t.mode][degre]! : [0, 3, 4];
   return (
     `<span>Souvent après <b>${nomAccord(t, dernier)}</b> :</span>` +
-    suivants.map((i) => htmlPuce(t, dia[i]!, true)).join('')
+    suivants.map((i) => htmlPuce(t, dia[i]!, chiffrage, true)).join('')
   );
 }
 
@@ -212,7 +216,7 @@ export const htmlFiltres = (filtre: Filtre): string =>
     )
     .join('');
 
-export function htmlProgressions({ tonalite: t, filtre }: Etat): string {
+export function htmlProgressions({ tonalite: t, filtre, chiffrage }: Etat): string {
   const visibles = PROGRESSIONS.filter((p) => filtre === 'toutes' || p.ambiances.includes(filtre));
   if (!visibles.length) {
     return '<p class="vide-liste">Aucune progression dans cette ambiance pour l’instant.</p>';
@@ -225,7 +229,7 @@ export function htmlProgressions({ tonalite: t, filtre }: Etat): string {
         .map((e) => `<span class="etiquette" data-ambiance="${e}">${e}</span>`)
         .join('');
       return `<button type="button" class="progression" data-progression="${PROGRESSIONS.indexOf(p)}">
-  <div><div class="degres">${accords.map((a) => chiffre(a, p.mode)).join(' – ')}</div>
+  <div><div class="degres">${accords.map((a) => chiffre(a, p.mode, chiffrage)).join(' – ')}</div>
     <div class="noms">${accords.map((a) => nomAccord(dansSonMode, a)).join(' – ')}</div></div>
   <div><div class="titre">${p.nom}</div><div class="titres">${p.titres.join(', ')}</div>
     <div class="etiquettes">${etiquettes}</div></div>

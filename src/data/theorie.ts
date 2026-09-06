@@ -106,10 +106,20 @@ export const racine = (t: Tonalite, a: Accord): string => nomNote(semiAbsolu(t, 
 /** « F#m ». */
 export const nomAccord = (t: Tonalite, a: Accord): string => racine(t, a) + SUFFIXE[a.q];
 
-/** « vi », « bVII », « vii° », « V7 ». */
-export function chiffre(a: Accord, mode: Mode): string {
+/**
+ * Deux façons d'écrire les degrés. `casse`, l'usage anglo-saxon et celui des
+ * grilles pop : la majuscule dit majeur, la minuscule mineur (I – V – vi – IV).
+ * `majuscules`, le chiffrage classique français : tout en majuscules, la
+ * qualité vient de la tonalité (I – V – VI – IV). Le ° et le 7 restent.
+ */
+export type Chiffrage = 'casse' | 'majuscules';
+
+/** « vi », « bVII », « vii° », « V7 ». L'adresse utilise toujours `casse` : la casse y porte la qualité. */
+export function chiffre(a: Accord, mode: Mode, chiffrage: Chiffrage = 'casse'): string {
   let c = CHIFFRES[mode][a.rel]!;
-  if (a.q === 'min' || a.q === 'dim') c = c.replace(/[IV]+/, (m) => m.toLowerCase());
+  if (chiffrage === 'casse' && (a.q === 'min' || a.q === 'dim')) {
+    c = c.replace(/[IV]+/, (m) => m.toLowerCase());
+  }
   if (a.q === 'dim') c += '°';
   if (a.q === 'dom7') c += '7';
   return c;

@@ -112,3 +112,16 @@ test('la grille passe en septièmes sur I, IV et V, et revient aux accords purs'
     ['I7', 'V7', 'vi', 'IV7'],
   );
 });
+
+test('le chiffrage classique met tout en majuscules, l’adresse garde la casse', () => {
+  const pop = [0, 4, 5, 3].map((i) => diatoniques('maj')[i]!);
+  assert.deepEqual(
+    pop.map((a) => chiffre(a, 'maj', 'majuscules')),
+    ['I', 'V', 'VI', 'IV'],
+  );
+  assert.equal(chiffre({ rel: 11, q: 'dim' }, 'maj', 'majuscules'), 'VII°');
+  assert.equal(chiffre({ rel: 2, q: 'dim' }, 'min', 'majuscules'), 'II°');
+  assert.equal(chiffre({ rel: 10, q: 'maj' }, 'maj', 'majuscules'), 'bVII');
+  assert.equal(chiffre({ rel: 7, q: 'dom7' }, 'maj', 'majuscules'), 'V7');
+  assert.equal(adresse(SOL, pop), '#sol-majeur/I-V-vi-IV');
+});

@@ -34,8 +34,12 @@ Site : <https://grille-accords.pages.dev>
   mêmes notes.
 - **Les septièmes.** Sous les accords de la tonalité, les trois septièmes de
   dominante du blues (I7, IV7, V7), avec leurs doigtés ouverts.
+- **Les degrés.** Deux écritures au choix, mémorisées : « I, vi », l'usage des
+  grilles pop où la casse dit la qualité, ou « I, VI », le chiffrage classique
+  tout en majuscules. Le ° et le 7 restent dans les deux cas.
 - **Le lien.** L'adresse décrit la grille en clair, `#sol-majeur/I-V-vi-IV` :
-  la copier, c'est copier la grille.
+  la copier, c'est copier la grille. Elle garde toujours la casse, qui y porte
+  la qualité de l'accord, quel que soit l'affichage choisi.
 
 ## Commandes
 
