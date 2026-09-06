@@ -1,0 +1,12 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "include": [".astro/types.d.ts", "src/**/*", "tests/**/*", "*.mjs"],
+  "compilerOptions": {
+    // Les imports portent l'extension `.ts` : c'est ce que Node exige pour
+    // exécuter les tests sans étape de compilation (`node --test`), et Vite
+    // l'accepte tel quel côté site.
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+  },
+  "exclude": ["dist", "node_modules", "public", ".wrangler"]
+}

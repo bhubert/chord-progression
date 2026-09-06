@@ -1,0 +1,107 @@
+# Contrôles et publication du site.
+#
+# Un seul workflow, un seul job, en séquence : les contrôles passent d'abord,
+# et `wrangler` n'est atteint que s'ils passent. Ce qui est déployé est
+# exactement ce qui a été vérifié, dans la même arborescence.
+#
+#   push sur `main`       un commit de code : contrôles puis publication
+#   pull_request          contrôles seuls, sans publication
+#   workflow_dispatch     à la main, pour rattraper un site en retard
+#
+# ⚠️ Ne pas ajouter de `paths-ignore` pour économiser du quota : le jour où
+# une protection de branche exigera ce contrôle, un commit qui le saute ne
+# publie jamais le statut attendu et plus rien n'est fusionnable.
+
+name: Contrôles et publication
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Le job lit le dépôt et téléverse ailleurs : aucun droit d'écriture ici.
+permissions:
+  contents: read
+
+concurrency:
+  # Deux poussés sur `main` s'annulent l'un l'autre, ils publieraient le même
+  # état. Annuler une publication en cours est sans danger : wrangler
+  # téléverse puis crée le déploiement, une interruption laisse la version en
+  # ligne intacte.
+  group: publication-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publier:
+    name: Contrôles et publication
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Récupération du dépôt
+        uses: actions/checkout@v7
+
+      - name: Installation de Node
+        uses: actions/setup-node@v7
+        with:
+          # Une seule source de vérité pour la version de Node : .nvmrc
+          node-version-file: .nvmrc
+
+      - name: Cache npm
+        # Plutôt que le `cache: npm` de setup-node : celui-ci pose une clé
+        # exacte sans repli, et ajouter un paquet de 20 Ko invalide alors tout.
+        # Avec `restore-keys`, une clé manquante retombe sur le cache le plus
+        # récent, et `npm ci` ne télécharge que la différence.
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: npm-${{ runner.os }}-
+
+      - name: Installation des dépendances
+        # `npm ci` : installation reproductible à partir du verrou, échec si
+        # package.json et package-lock.json divergent.
+        run: npm ci --prefer-offline --no-audit --no-fund
+
+      - name: Mise en forme
+        run: npm run lint
+
+      - name: Vérification des types
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+      - name: Construction du site
+        run: npm run build
+
+      - name: Jeton Cloudflare
+        id: jeton
+        if: github.event_name != 'pull_request'
+        # Le secret passe par l'environnement, jamais par interpolation dans
+        # le script : une valeur contenant un caractère de shell y serait
+        # interprétée au lieu d'être comparée.
+        env:
+          JETON: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$JETON" ]; then
+            echo 'present=false' >> "$GITHUB_OUTPUT"
+            echo '::warning::Secret CLOUDFLARE_API_TOKEN absent : le site n’est pas déployé. Voir le README, « Mise en service ».'
+          else
+            echo 'present=true' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Déploiement Cloudflare Pages
+        if: github.event_name != 'pull_request' && steps.jeton.outputs.present == 'true'
+        run: |
+          npx wrangler pages deploy dist \
+            --project-name=grille-accords \
+            --branch=main \
+            --commit-dirty=true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          # L'identifiant de compte n'est pas un secret : il ne donne accès à
+          # rien seul, et figure dans chaque URL du tableau de bord.
+          CLOUDFLARE_ACCOUNT_ID: 277906cd6b4f5395f7b520d2a21b8afb

@@ -1,0 +1,30 @@
+{
+  "name": "grille",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.6.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "lint": "prettier --check .",
+    "typecheck": "astro check",
+    "test": "node --test tests/*.test.ts",
+    "format": "prettier --write .",
+    "deploy": "wrangler pages deploy dist --project-name=grille-accords"
+  },
+  "dependencies": {
+    "astro": "^5.14.4"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@types/node": "^26.4.1",
+    "prettier": "^3.9.6",
+    "prettier-plugin-astro": "^0.14.1",
+    "typescript": "^5.9.2",
+    "wrangler": "^4.114.0"
+  }
+}

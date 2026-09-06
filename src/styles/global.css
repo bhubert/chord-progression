@@ -1,0 +1,651 @@
+/*
+ * Un seul thème, « palissandre » : fond bois sombre, texte ivoire, laiton pour
+ * ce qui se clique ou qui joue. Les accords mineurs sont bleutés, les
+ * diminués mauves : la couleur dit la qualité, pas l'humeur.
+ *
+ * Pas de bloc `prefers-color-scheme` : c'est un choix, le site s'affiche
+ * pareil partout. Un thème clair « érable » reste possible plus tard, en
+ * redéfinissant uniquement les variables ci-dessous.
+ */
+
+:root {
+  --bois: #1b1411;
+  --bois-2: #241a15;
+  --bois-3: #2f221b;
+  --frette: #4a3d34;
+  --frette-2: #6a5a4d;
+  --ivoire: #f0e6d3;
+  --ivoire-2: #b8a992;
+  --ivoire-3: #7f7263;
+  --laiton: #d9ae5c;
+  --laiton-2: #f1cb7a;
+  --mineur: #91b4c8;
+  --dim: #c39bb4;
+  --police-titre: 'Gloock', Georgia, 'Times New Roman', serif;
+  --police-ui: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --police-accord: 'Barlow Semi Condensed', 'Arial Narrow', Arial, sans-serif;
+}
+
+html {
+  color-scheme: dark;
+  background: var(--bois);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bois);
+  background-image: radial-gradient(ellipse 70% 40% at 20% 0%, #2a1e17 0%, transparent 70%);
+  color: var(--ivoire);
+  font: 15px/1.5 var(--police-ui);
+  -webkit-font-smoothing: antialiased;
+}
+:focus-visible {
+  outline: 2px solid var(--laiton);
+  outline-offset: 2px;
+}
+button {
+  font-family: inherit;
+}
+figure {
+  margin: 0;
+}
+a {
+  color: var(--laiton);
+}
+.page {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 30px 28px 64px;
+}
+
+/* ── En-tête ─────────────────────────────────────────────────────────── */
+
+.entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px 40px;
+  flex-wrap: wrap;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--frette);
+}
+.marque {
+  margin: 0;
+  font: 400 48px/1 var(--police-titre);
+  letter-spacing: -0.01em;
+  color: var(--ivoire);
+}
+.slogan {
+  margin: 10px 0 0;
+  color: var(--ivoire-2);
+  font-size: 15px;
+}
+.reglages {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.reglage {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ivoire-2);
+  font-size: 14px;
+}
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--bois-2)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23b8a992' stroke-width='1.6'/%3E%3C/svg%3E")
+    no-repeat right 10px center;
+  border: 1px solid var(--frette-2);
+  border-radius: 4px;
+  color: var(--ivoire);
+  font: 500 15px var(--police-ui);
+  padding: 7px 32px 7px 12px;
+  cursor: pointer;
+  min-width: 128px;
+}
+.segments {
+  display: inline-flex;
+  border: 1px solid var(--frette-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.segments button {
+  background: transparent;
+  border: 0;
+  color: var(--ivoire-2);
+  padding: 7px 13px;
+  font: 500 14px var(--police-ui);
+  cursor: pointer;
+}
+.segments button + button {
+  border-left: 1px solid var(--frette-2);
+}
+.segments button[aria-pressed='true'] {
+  background: var(--ivoire);
+  color: var(--bois);
+}
+
+/* ── Blocs ───────────────────────────────────────────────────────────── */
+
+.bloc {
+  padding-top: 34px;
+}
+.bloc-entete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.bloc h2 {
+  margin: 0;
+  font: 400 27px/1.15 var(--police-titre);
+  color: var(--ivoire);
+  text-wrap: balance;
+}
+.sous {
+  margin: 0;
+  color: var(--ivoire-2);
+  font-size: 14px;
+  max-width: 62ch;
+}
+
+/* ── La grille ───────────────────────────────────────────────────────── */
+
+.cadre {
+  position: relative;
+  padding: 0 12px;
+}
+.grille {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--frette);
+  border-left: 4px double var(--ivoire-2);
+  border-right: 4px double var(--ivoire-2);
+}
+/* Points de reprise, quand la boucle est active : ‖: … :‖ */
+.cadre.boucle .grille::before,
+.cadre.boucle .grille::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 24px;
+  transform: translateY(-50%);
+  background: radial-gradient(circle, var(--laiton) 2.4px, transparent 3px) 0 0 / 6px 12px repeat-y;
+}
+.cadre.boucle .grille::before {
+  left: -12px;
+}
+.cadre.boucle .grille::after {
+  right: -12px;
+}
+.mesure {
+  position: relative;
+  min-height: 108px;
+  padding: 14px 12px 12px 16px;
+  border: 0;
+  border-right: 1px solid var(--frette);
+  border-bottom: 1px solid var(--frette);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.mesure:nth-child(4n) {
+  border-right: 0;
+}
+.mesure:hover {
+  background: var(--bois-2);
+}
+.mesure.joue {
+  background: var(--bois-3);
+  box-shadow: inset 0 -3px 0 var(--laiton);
+}
+.mesure.blanche {
+  cursor: default;
+}
+.mesure.blanche:hover {
+  background: transparent;
+}
+.accord {
+  font: 600 clamp(28px, 4.4vw, 46px) / 1 var(--police-accord);
+  color: var(--ivoire);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.accord .suffixe {
+  font-size: 0.62em;
+  font-weight: 500;
+  margin-left: 1px;
+}
+.accord.min {
+  color: var(--mineur);
+}
+.accord.dim {
+  color: var(--dim);
+}
+.degre {
+  font: 500 13px/1 var(--police-ui);
+  color: var(--ivoire-3);
+  letter-spacing: 0.02em;
+}
+.retirer {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--ivoire-3);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.mesure:hover .retirer,
+.mesure:focus-visible .retirer {
+  opacity: 1;
+}
+.mesure-ajout {
+  justify-content: center;
+  align-items: center;
+  color: var(--ivoire-3);
+  font-size: 14px;
+  gap: 6px;
+}
+.mesure-ajout .plus {
+  font: 500 30px/1 var(--police-accord);
+  color: var(--ivoire-3);
+}
+.mesure-ajout.vide {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  padding: 22px;
+}
+.mesure-ajout:hover {
+  color: var(--ivoire-2);
+}
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding: 0 12px;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid var(--frette-2);
+  border-radius: 4px;
+  color: var(--ivoire);
+  font: 500 14px var(--police-ui);
+  padding: 8px 14px;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+.btn:hover {
+  background: var(--bois-3);
+  border-color: var(--ivoire-3);
+}
+.btn svg {
+  width: 12px;
+  height: 12px;
+}
+.btn-principal {
+  background: var(--laiton);
+  border-color: var(--laiton);
+  color: var(--bois);
+  font-weight: 600;
+  padding: 9px 18px;
+}
+.btn-principal:hover {
+  background: var(--laiton-2);
+  border-color: var(--laiton-2);
+}
+.btn-bascule[aria-pressed='true'] {
+  border-color: var(--laiton);
+  color: var(--laiton);
+}
+.btn-discret {
+  border-color: transparent;
+  color: var(--ivoire-2);
+}
+.tempo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ivoire-2);
+  font-size: 14px;
+  margin-left: 8px;
+}
+.tempo input {
+  accent-color: var(--laiton);
+  width: 120px;
+}
+.tempo output {
+  font: 600 15px var(--police-accord);
+  color: var(--ivoire);
+  min-width: 2.2em;
+  font-variant-numeric: tabular-nums;
+}
+.pousse {
+  margin-left: auto;
+}
+
+/* ── Accords de la tonalité, positions ───────────────────────────────── */
+
+.deux-colonnes {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 0 48px;
+}
+.puces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.puce {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  min-width: 66px;
+  padding: 10px 12px 9px;
+  background: var(--bois-2);
+  border: 1px solid var(--frette);
+  border-radius: 4px;
+  color: var(--ivoire);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.puce:hover {
+  background: var(--bois-3);
+  border-color: var(--frette-2);
+}
+.puce .accord {
+  font-size: 26px;
+}
+.puce.petite {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 7px;
+  padding: 6px 10px;
+  min-width: 0;
+}
+.puce.petite .accord {
+  font-size: 20px;
+}
+.apres {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: var(--ivoire-2);
+  font-size: 14px;
+}
+.apres:empty {
+  display: none;
+}
+.apres b {
+  color: var(--ivoire);
+  font-weight: 600;
+}
+.legende {
+  margin: 18px 0 0;
+  color: var(--ivoire-3);
+  font-size: 13px;
+}
+.legende .pastille {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  vertical-align: -1px;
+  margin: 0 4px 0 2px;
+}
+.pastille.maj {
+  background: var(--ivoire);
+}
+.pastille.min {
+  background: var(--mineur);
+}
+.pastille.dim {
+  background: var(--dim);
+}
+
+.diagrammes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 16px;
+}
+.diagramme {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.diagramme svg {
+  width: 94px;
+  height: auto;
+  display: block;
+  font-family: var(--police-ui);
+}
+.diagramme .nom {
+  font: 600 18px var(--police-accord);
+  color: var(--ivoire);
+}
+.diagramme .nom.min {
+  color: var(--mineur);
+}
+.diagramme .nom.dim {
+  color: var(--dim);
+}
+.capo {
+  margin-top: 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--frette);
+  border-left: 3px solid var(--laiton);
+  background: var(--bois-2);
+  font-size: 14px;
+  color: var(--ivoire-2);
+}
+.capo b {
+  color: var(--ivoire);
+  font-weight: 600;
+}
+.capo .formes {
+  font: 600 20px/1.2 var(--police-accord);
+  color: var(--ivoire);
+  margin-top: 4px;
+}
+.capo .formes .suffixe {
+  font-size: 0.7em;
+  font-weight: 500;
+}
+
+/* ── Progressions ────────────────────────────────────────────────────── */
+
+.filtres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.filtre {
+  padding: 5px 12px;
+  border: 1px solid var(--frette);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ivoire-2);
+  font: 500 13px var(--police-ui);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.filtre:hover {
+  color: var(--ivoire);
+  border-color: var(--frette-2);
+}
+.filtre[aria-pressed='true'] {
+  background: var(--ivoire);
+  color: var(--bois);
+  border-color: var(--ivoire);
+}
+.liste-progressions {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 48px;
+  border-top: 1px solid var(--frette);
+}
+.progression {
+  display: grid;
+  grid-template-columns: minmax(150px, 44%) 1fr;
+  gap: 2px 18px;
+  align-items: start;
+  width: 100%;
+  padding: 16px 10px;
+  border: 0;
+  border-bottom: 1px solid var(--frette);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.progression:hover {
+  background: var(--bois-2);
+}
+.progression .degres {
+  font: 600 22px/1.15 var(--police-accord);
+  color: var(--ivoire);
+  letter-spacing: 0.01em;
+}
+.progression .noms {
+  font: 500 15px/1.3 var(--police-accord);
+  color: var(--ivoire-2);
+  margin-top: 5px;
+}
+.progression .titre {
+  font-weight: 600;
+  color: var(--ivoire);
+}
+.progression .titres {
+  color: var(--ivoire-2);
+  font-size: 14px;
+  margin-top: 2px;
+}
+.progression .etiquettes {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.etiquette {
+  font-size: 12px;
+  color: var(--ivoire-3);
+  border: 1px solid var(--frette);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.vide-liste {
+  grid-column: 1 / -1;
+  padding: 24px 10px;
+  color: var(--ivoire-3);
+}
+
+/* ── À propos, pied ──────────────────────────────────────────────────── */
+
+.apropos {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--frette);
+  color: var(--ivoire-2);
+  font-size: 14px;
+  max-width: 68ch;
+}
+.apropos p {
+  margin: 0 0 10px;
+}
+.pied {
+  margin-top: 28px;
+  color: var(--ivoire-3);
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translate(-50%, 10px);
+  background: var(--ivoire);
+  color: var(--bois);
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+}
+.toast.visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (max-width: 860px) {
+  .page {
+    padding: 22px 16px 48px;
+  }
+  .deux-colonnes {
+    grid-template-columns: 1fr;
+  }
+  .liste-progressions {
+    grid-template-columns: 1fr;
+  }
+  .marque {
+    font-size: 40px;
+  }
+  .mesure {
+    min-height: 88px;
+    padding: 10px 8px 10px 10px;
+  }
+  .cadre {
+    padding: 0 10px;
+  }
+  .transport {
+    padding: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

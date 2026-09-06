@@ -1,0 +1,141 @@
+---
+/**
+ * La page. Rendue au build dans l'état par défaut avec les mêmes fonctions
+ * que le navigateur (`src/data/rendu.ts`) : on voit la grille avant tout
+ * script, et le script ne reconstruit que ce que l'adresse lui demande.
+ */
+import Base from '../layouts/Base.astro';
+import {
+  etatInitial,
+  htmlApres,
+  htmlCapo,
+  htmlDiatoniques,
+  htmlFiltres,
+  htmlGrille,
+  optionsTonique,
+  htmlPositions,
+  htmlProgressions,
+  htmlTitreTonalite,
+} from '../data/rendu.ts';
+
+const etat = etatInitial();
+---
+
+<Base
+  titre="Grille, progressions d’accords pour guitare"
+  description="Trouvez une progression d’accords à la guitare : choisissez une tonalité, assemblez une grille, écoutez-la, retrouvez les positions et le capo. Gratuit, sans compte."
+>
+  <div class="page">
+    <header class="entete">
+      <div>
+        <h1 class="marque">Grille</h1>
+        <p class="slogan">Trouvez la progression d’accords, écoutez-la, jouez-la à la guitare.</p>
+      </div>
+      <div class="reglages">
+        <label class="reglage"
+          >Tonalité
+          <select class="select" id="tonique">
+            {
+              optionsTonique(etat.tonalite).map((o) => (
+                <option value={o.valeur} selected={o.choisie}>
+                  {o.libelle}
+                </option>
+              ))
+            }
+          </select>
+        </label>
+        <div class="segments" role="group" aria-label="Mode">
+          <button type="button" data-mode="maj" aria-pressed="true">Majeur</button>
+          <button type="button" data-mode="min" aria-pressed="false">Mineur</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="bloc" aria-labelledby="titre-grille">
+        <div class="bloc-entete">
+          <h2 id="titre-grille">La grille</h2>
+          <p class="sous">
+            Cliquez un accord de la tonalité pour l’ajouter, cliquez une mesure pour la retirer.
+            Quatre mesures par ligne, comme sur une vraie grille.
+          </p>
+        </div>
+        <div class="cadre" id="cadre">
+          <div class="grille" id="grille" set:html={htmlGrille(etat)} />
+        </div>
+        <div class="transport">
+          <button type="button" class="btn btn-principal" id="jouer">
+            <svg viewBox="0 0 12 12" aria-hidden="true"
+              ><path d="M2 1.5v9l8-4.5z" fill="currentColor"></path></svg
+            >
+            <span>Écouter</span>
+          </button>
+          <button type="button" class="btn btn-bascule" id="boucle" aria-pressed="true"
+            >Boucle</button
+          >
+          <label class="tempo"
+            >Tempo
+            <input type="range" id="tempo" min="60" max="160" value="92" />
+            <output id="tempo-valeur">92</output>
+          </label>
+          <button type="button" class="btn pousse" id="partager">Copier le lien</button>
+          <button type="button" class="btn btn-discret" id="vider">Vider la grille</button>
+        </div>
+      </section>
+
+      <div class="deux-colonnes">
+        <section class="bloc" aria-labelledby="titre-tonalite">
+          <div class="bloc-entete">
+            <h2 id="titre-tonalite">{htmlTitreTonalite(etat.tonalite)}</h2>
+          </div>
+          <div class="puces" id="diatoniques" set:html={htmlDiatoniques(etat.tonalite)} />
+          <div class="apres" id="apres" set:html={htmlApres(etat)} />
+          <p class="legende">
+            <span class="pastille maj"></span>majeur
+            <span class="pastille min"></span>mineur
+            <span class="pastille dim"></span>diminué
+          </p>
+        </section>
+
+        <section class="bloc" aria-labelledby="titre-positions">
+          <div class="bloc-entete">
+            <h2 id="titre-positions">Positions</h2>
+            <p class="sous">Le point doré marque la fondamentale.</p>
+          </div>
+          <div class="diagrammes" id="diagrammes" set:html={htmlPositions(etat)} />
+          <div class="capo" id="capo" set:html={htmlCapo(etat)} />
+        </section>
+      </div>
+
+      <section class="bloc" aria-labelledby="titre-progressions">
+        <div class="bloc-entete">
+          <h2 id="titre-progressions">Progressions à essayer</h2>
+          <p class="sous">
+            Transposées dans la tonalité choisie. Cliquez pour charger dans la grille.
+          </p>
+        </div>
+        <div class="filtres" id="filtres" set:html={htmlFiltres(etat.filtre)} />
+        <div class="liste-progressions" id="progressions" set:html={htmlProgressions(etat)} />
+      </section>
+
+      <section class="apropos" aria-label="À propos">
+        <p>
+          Grille est un outil gratuit pour trouver des progressions d’accords à la guitare : une
+          tonalité, ses sept accords, une grille qu’on remplit en cliquant, l’écoute, les positions
+          et le capo qui va bien. Sans compte, sans publicité, sans rien à télécharger.
+        </p>
+        <p>
+          Le lien de la page décrit la grille en clair : copiez-le, il rejouera exactement ce que
+          vous avez assemblé. Le code est ouvert sur
+          <a href="https://github.com/bhubert/chord-progression">GitHub</a>.
+        </p>
+      </section>
+    </main>
+
+    <footer class="pied">
+      <span>Grille</span>
+      <span>Le son est un rendu synthétique : la vraie guitare, c’est vous.</span>
+    </footer>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</Base>

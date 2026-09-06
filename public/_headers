@@ -1,0 +1,19 @@
+# En-têtes servis par Cloudflare Pages.
+#
+# La politique de sécurité n'autorise que le site lui-même : polices,
+# styles et scripts sont servis depuis `dist/`, jamais depuis un CDN. Un
+# script bloqué par la CSP l'est en silence, d'où `inlineStylesheets: 'never'`
+# et `assetsInlineLimit: 0` dans `astro.config.mjs`.
+#
+# `img-src data:` couvre la flèche du menu de tonalité, un SVG en `data:`
+# dans `global.css`. `connect-src 'none'` : la page ne parle à personne.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; font-src 'self'; script-src 'self'; connect-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'
+
+# Les polices ne changent jamais sous le même nom.
+/polices/*
+  Cache-Control: public, max-age=31536000, immutable
