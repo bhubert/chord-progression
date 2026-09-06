@@ -109,7 +109,7 @@ const etat = etatInitial();
             <h2 id="titre-tonalite">{htmlTitreTonalite(etat.tonalite)}</h2>
           </div>
           <div class="puces" id="diatoniques" set:html={htmlDiatoniques(etat.tonalite)} />
-          <div class="apres" id="blues" set:html={htmlBlues(etat.tonalite)} />
+          <div class="apres" id="blues" set:html={htmlBlues(etat)} />
           <div class="apres" id="apres" set:html={htmlApres(etat)} />
           <p class="legende">
             <span class="pastille maj"></span>majeur

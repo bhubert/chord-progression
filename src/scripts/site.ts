@@ -28,6 +28,7 @@
 
 import {
   adresse,
+  basculerSeptiemes,
   lireAdresse,
   nomTonalite,
   transposerMode,
@@ -87,7 +88,7 @@ function rendreGrille(): void {
 
 function rendreTonalite(): void {
   $('#diatoniques').innerHTML = htmlDiatoniques(etat.tonalite);
-  $('#blues').innerHTML = htmlBlues(etat.tonalite);
+  $('#blues').innerHTML = htmlBlues(etat);
   $('#apres').innerHTML = htmlApres(etat);
 }
 
@@ -415,6 +416,10 @@ document.addEventListener('click', (e) => {
   const cible = e.target as HTMLElement;
   const puce = cible.closest<HTMLElement>('.puce');
   if (puce) ajouter(Number(puce.dataset.rel), puce.dataset.q as Qualite);
+  if (cible.closest('#septiemes')) {
+    etat.grille = basculerSeptiemes(etat.grille);
+    rendreGrilleEtSuite();
+  }
   const filtre = cible.closest<HTMLElement>('.filtre');
   if (filtre) {
     etat.filtre = filtre.dataset.filtre as Filtre;

@@ -425,6 +425,11 @@ a {
   border-color: transparent;
   color: var(--ivoire-2);
 }
+.btn-petit {
+  padding: 5px 10px;
+  font-size: 13px;
+  border-color: var(--frette);
+}
 .tempo {
   display: flex;
   align-items: center;

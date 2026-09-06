@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   adresse,
+  basculerSeptiemes,
   chiffre,
   diatoniques,
   lireAdresse,
@@ -94,4 +95,20 @@ test('la septième de dominante s’écrit avec un 7, dans l’adresse aussi', (
   assert.deepEqual(lireAdresse('#sol-majeur/I7-IV7-V7')?.grille, blues);
   // Une septième n'est pas diatonique : le passage en mineur la laisse telle quelle.
   assert.deepEqual(transposerMode(blues, 'maj', 'min'), blues);
+});
+
+test('la grille passe en septièmes sur I, IV et V, et revient aux accords purs', () => {
+  const pure = [0, 3, 4].map((i) => diatoniques('maj')[i]!); // I IV V
+  const septiemes = basculerSeptiemes(pure);
+  assert.deepEqual(
+    septiemes.map((a) => chiffre(a, 'maj')),
+    ['I7', 'IV7', 'V7'],
+  );
+  assert.deepEqual(basculerSeptiemes(septiemes), pure);
+  // Le vi n'est pas concerné, et un mélange repasse d'abord en accords purs.
+  const pop = [0, 4, 5, 3].map((i) => diatoniques('maj')[i]!);
+  assert.deepEqual(
+    basculerSeptiemes(pop).map((a) => chiffre(a, 'maj')),
+    ['I7', 'V7', 'vi', 'IV7'],
+  );
 });

@@ -134,13 +134,24 @@ export const htmlDiatoniques = (t: Tonalite): string =>
     .map((a) => htmlPuce(t, a))
     .join('');
 
-/** Les trois septièmes du blues, en majeur seulement : I7, IV7, V7. */
-export function htmlBlues(t: Tonalite): string {
+/**
+ * Les trois septièmes du blues, en majeur seulement : I7, IV7, V7, et le
+ * bouton qui bascule toute la grille entre accords purs et septièmes.
+ */
+export function htmlBlues({ tonalite: t, grille }: Etat): string {
   if (t.mode !== 'maj') return '';
   const septiemes: Accord[] = [0, 5, 7].map((rel) => ({ rel, q: 'dom7' }));
+  const enSeptiemes = grille.some((a) => a.q === 'dom7' && [0, 5, 7].includes(a.rel));
+  const basculable = grille.some(
+    (a) => [0, 5, 7].includes(a.rel) && (a.q === 'maj' || a.q === 'dom7'),
+  );
+  const bouton = basculable
+    ? `<button type="button" class="btn btn-discret btn-petit" id="septiemes">${enSeptiemes ? 'Revenir aux accords purs' : 'Passer la grille en septièmes'}</button>`
+    : '';
   return (
     '<span>Pour un blues, les trois septièmes :</span>' +
-    septiemes.map((a) => htmlPuce(t, a, true)).join('')
+    septiemes.map((a) => htmlPuce(t, a, true)).join('') +
+    bouton
   );
 }
 

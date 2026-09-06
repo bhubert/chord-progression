@@ -82,7 +82,7 @@ export const PROGRESSIONS: readonly Progression[] = [
       [5, 'maj'],
       [7, 'maj'],
     ],
-    ambiances: ['rock', 'folk', 'blues'],
+    ambiances: ['rock', 'folk'],
     titres: ['Twist and Shout', 'La Bamba', 'Wild Thing'],
   },
   {

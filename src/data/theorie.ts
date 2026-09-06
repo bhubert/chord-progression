@@ -150,6 +150,22 @@ export function transposerMode(grille: readonly Accord[], ancien: Mode, nouveau:
   });
 }
 
+/**
+ * Les degrés I, IV et V en septièmes de dominante, ou l'inverse : la couleur
+ * blues d'une grille, en un geste. Twist and Shout en accords purs, le même
+ * tour en septièmes, et retour.
+ */
+export function basculerSeptiemes(grille: readonly Accord[]): Accord[] {
+  const degres = new Set([0, 5, 7]);
+  const dejaEnSeptiemes = grille.some((a) => a.q === 'dom7' && degres.has(a.rel));
+  return grille.map((a) => {
+    if (!degres.has(a.rel)) return a;
+    if (dejaEnSeptiemes && a.q === 'dom7') return { rel: a.rel, q: 'maj' };
+    if (!dejaEnSeptiemes && a.q === 'maj') return { rel: a.rel, q: 'dom7' };
+    return a;
+  });
+}
+
 // ── Adresse ────────────────────────────────────────────────────────────────
 //
 // `#sol-majeur/I-V-vi-IV`. Lisible, sans caractère à encoder : le ° s'écrit
