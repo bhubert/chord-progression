@@ -37,6 +37,7 @@ import {
   descriptionAncre,
   forme,
   nomsPenta,
+  placementsToutes,
   placer,
   relativePenta,
   svgManche,
@@ -57,7 +58,7 @@ export interface Etat {
   /** Casse des degrés : « I, vi » ou « I, VI ». */
   chiffrage: Chiffrage;
   /** Le manche : l'accord regardé (sinon le premier de la grille) et la forme posée (sinon les racines). */
-  manche: { accord: Accord | null; forme: Lettre | null; penta: Penta | null };
+  manche: { accord: Accord | null; forme: Lettre | 'toutes' | null; penta: Penta | null };
 }
 
 export const MAX_MESURES = 16;
@@ -272,7 +273,8 @@ export function accordManche(etat: Etat): Accord {
 /** La forme posée, si elle existe pour cet accord. */
 export function placementManche(etat: Etat): Placement | null {
   const a = accordManche(etat);
-  const f = etat.manche.forme ? forme(a.q, etat.manche.forme) : null;
+  const lettre = etat.manche.forme;
+  const f = lettre && lettre !== 'toutes' ? forme(a.q, lettre) : null;
   return f ? placer(etat.tonalite, a, f) : null;
 }
 
@@ -292,7 +294,13 @@ export function htmlManche(etat: Etat): string {
       return `<button type="button" class="forme" data-forme="${f.lettre}" aria-pressed="${p?.forme.lettre === f.lettre}"><span class="lettre">${f.lettre}</span><span class="ou">${NOMS_FORMES[f.lettre]}<br>${descriptionAncre(pl)}</span></button>`;
     })
     .join('');
-  const toutes = `<button type="button" class="forme" data-forme="racines" aria-pressed="${p === null}"><span class="lettre">●</span><span class="ou">Toutes les racines<br>de ${nomAccord(t, a)} sur le manche</span></button>`;
+  const carte =
+    etat.manche.forme === 'toutes' && FORMES[a.q].length ? placementsToutes(t, a) : null;
+  const toutes =
+    `<button type="button" class="forme" data-forme="racines" aria-pressed="${p === null && !carte}"><span class="lettre">●</span><span class="ou">Toutes les racines<br>de ${nomAccord(t, a)} sur le manche</span></button>` +
+    (FORMES[a.q].length
+      ? `<button type="button" class="forme" data-forme="toutes" aria-pressed="${carte !== null}"><span class="lettre">${FORMES[a.q].length}</span><span class="ou">Les ${FORMES[a.q].length === 5 ? 'cinq' : 'trois'} formes<br>à leur place sur le manche</span></button>`
+      : '');
   const penta = etat.manche.penta;
   const reglagePenta = `<div class="reglage penta-reglage">Pentatonique<div class="segments" role="group" aria-label="Pentatonique">${(
     [
@@ -307,7 +315,12 @@ export function htmlManche(etat: Etat): string {
     )
     .join('')}</div></div>`;
   let phrase: string;
-  if (p) {
+  if (carte) {
+    const ordre = carte
+      .map((pl) => NOMS_FORMES[pl.forme.lettre].replace('forme de ', ''))
+      .join(', ');
+    phrase = `<b>Les formes de ${nomAccord(t, a)}, de la plus basse à la plus haute</b> : ${ordre}. Chacune est tracée sur la zone de sa boîte ; les zones se recouvrent d’une note, c’est là qu’on passe de l’une à l’autre. Dans chaque point : R la fondamentale, 3 la tierce, 5 la quinte${a.q === 'min' ? ', b3 la tierce mineure' : a.q === 'dom7' ? ', b7 la septième' : ''}.`;
+  } else if (p) {
     const legende =
       a.q === 'min'
         ? 'R la fondamentale, b3 la tierce mineure, 5 la quinte'
@@ -320,7 +333,7 @@ export function htmlManche(etat: Etat): string {
   } else {
     phrase = `Les racines de <b>${nomAccord(t, a)}</b> sur tout le manche. Choisissez une forme pour voir où la poser${a.q === 'min' ? '. En mineur, trois formes suffisent : Mi, La et Ré' : ''}.`;
   }
-  if (penta) {
+  if (penta && !carte) {
     const relative = relativePenta(t, a, penta);
     phrase += ` <b>Pentatonique ${NOMS_PENTA[penta]} de ${racine(t, a)}</b> : ${nomsPenta(t, a, penta).join(', ')}. Ce sont les mêmes notes que la pentatonique ${NOMS_PENTA[relative.penta]} de ${relative.nom}.${
       p
@@ -329,7 +342,7 @@ export function htmlManche(etat: Etat): string {
     }`;
   }
   return `<div class="manche-choix"><div class="choix-groupe" role="group" aria-label="Accord regardé">${choix}</div>${reglagePenta}</div>
-<div class="manche-defile">${svgManche(t, a, p, penta)}</div>
+<div class="manche-defile">${svgManche(t, a, p, penta, carte)}</div>
 <div class="formes" role="group" aria-label="Forme">${toutes}${formes}</div>
 <p class="manche-phrase">${phrase}</p>`;
 }

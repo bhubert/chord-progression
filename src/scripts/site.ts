@@ -444,7 +444,8 @@ document.addEventListener('click', (e) => {
   const formeChoisie = cible.closest<HTMLElement>('.forme');
   if (formeChoisie) {
     const lettre = formeChoisie.dataset.forme;
-    etat.manche.forme = lettre === 'racines' ? null : (lettre as Lettre);
+    etat.manche.forme =
+      lettre === 'racines' ? null : lettre === 'toutes' ? 'toutes' : (lettre as Lettre);
     rendreManche();
     // On l'entend en la posant : un battement, sans toucher à la lecture en cours.
     const p = placementManche(etat);

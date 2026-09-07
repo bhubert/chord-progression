@@ -11,6 +11,7 @@ import {
   nomsPenta,
   notesPenta,
   notesPlacement,
+  placementsToutes,
   placer,
   racines,
   relativePenta,
@@ -239,8 +240,9 @@ test('un doigté de référence connaît sa forme CAGED', () => {
 });
 
 test('les points d’une forme disent ce qu’ils jouent : R, 3, 5, et b3 ou b7 selon la qualité', () => {
+  // Les fondamentales sont des R en couleur sur point évidé, les autres des chiffres en blanc cerné.
   const etiquettes = (svg: string) =>
-    [...svg.matchAll(/paint-order="stroke" text-anchor="middle">([^<]*)</g)].map((m) => m[1]);
+    [...svg.matchAll(/font-weight="700"[^>]*text-anchor="middle">(R|b?\d)</g)].map((m) => m[1]);
   const E = placer(SOL, { rel: 0, q: 'maj' }, forme('maj', 'E')!);
   assert.deepEqual(etiquettes(svgManche(SOL, { rel: 0, q: 'maj' }, E)), [
     'R',
@@ -286,4 +288,27 @@ test('sur tout le manche, chaque note sait à quelles boîtes elle appartient, d
     'maj',
   );
   assert.doesNotMatch(avec, /A8 8 0 0 0/);
+});
+
+test('la carte des formes : cinq en Do, plus celle de Do une octave plus haut, tracées et zonées', () => {
+  const DO: Tonalite = { tonique: 0, mode: 'maj' };
+  const carte = placementsToutes(DO, { rel: 0, q: 'maj' });
+  assert.deepEqual(
+    carte.map((p) => `${p.forme.lettre}${p.ancreFrette}`),
+    ['C3', 'A3', 'G8', 'E8', 'D10', 'C15'],
+  );
+  const svg = svgManche(DO, { rel: 0, q: 'maj' }, null, 'maj', carte);
+  assert.equal((svg.match(/<polyline /g) ?? []).length, 6, 'un trait par forme');
+  assert.equal((svg.match(/opacity="0.13"/g) ?? []).length, 6, 'une zone par forme');
+  assert.doesNotMatch(svg, /font-weight="500"/, 'pas de pentatonique dans la carte');
+  // Une forme seule est tracée aussi, et sa fondamentale est un point évidé marqué R.
+  const seule = svgManche(
+    DO,
+    { rel: 0, q: 'maj' },
+    placer(DO, { rel: 0, q: 'maj' }, forme('maj', 'C')!),
+  );
+  assert.equal((seule.match(/<polyline /g) ?? []).length, 1);
+  assert.match(seule, /fill="var\(--bois-2\)" stroke="var\(--caged-c\)"/);
+  // Trois formes en mineur.
+  assert.equal(placementsToutes(DO, { rel: 9, q: 'min' }).length >= 3, true);
 });

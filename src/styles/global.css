@@ -10,9 +10,9 @@
  * (mineur bleu, diminué mauve, septième orange), la forme CAGED (une couleur
  * par lettre), l'ambiance d'une progression.
  *
- * Le code couleur CAGED suit l'arc-en-ciel dans l'ordre des formes : C rouge,
- * A jaune, G vert, E bleu, D violet. Il n'existe pas de norme ; pour en
- * adopter une autre, changer les cinq variables `--caged-*` dans chaque thème.
+ * Le code couleur CAGED est celui des chartes que l'utilisateur connaît :
+ * C rouge, A bleu, G turquoise, E vert, D orange. Pour en adopter une autre,
+ * changer les cinq variables `--caged-*` dans chaque thème.
  */
 
 :root {
@@ -30,11 +30,11 @@
   --mineur: #1c8ad6;
   --dim: #a34fc4;
   --septieme: #e2661a;
-  --caged-c: #e53e3e;
-  --caged-a: #e7ac00;
-  --caged-g: #22a35e;
-  --caged-e: #2a72e5;
-  --caged-d: #8a48dd;
+  --caged-c: #e63946;
+  --caged-a: #2563eb;
+  --caged-g: #0e9f9f;
+  --caged-e: #16a34a;
+  --caged-d: #f0a020;
   --amb-pop: #dc3d7c;
   --amb-lumineux: #d29a00;
   --amb-melancolique: #2b8fd6;
@@ -72,10 +72,10 @@
   --dim: #df9fe6;
   --septieme: #ff9f5c;
   --caged-c: #ff6b6b;
-  --caged-a: #ffd23f;
-  --caged-g: #5fd39a;
-  --caged-e: #5aaeff;
-  --caged-d: #c58bff;
+  --caged-a: #6ea8ff;
+  --caged-g: #4dd0d0;
+  --caged-e: #5fd39a;
+  --caged-d: #ffc04d;
   --amb-pop: #ff6fae;
   --amb-lumineux: #ffd23f;
   --amb-melancolique: #7fc9f0;
@@ -677,7 +677,7 @@ a {
 }
 .formes {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
   gap: 8px;
   margin-top: 14px;
 }

@@ -140,6 +140,24 @@ export function racines(t: Tonalite, a: Accord): [number, number][] {
   return resultat;
 }
 
+/**
+ * Les cinq formes (trois en mineur) posées chacune à sa place, puis une
+ * octave plus haut quand elles tiennent encore sur le manche : la carte du
+ * CAGED, de la boîte la plus basse à la plus haute.
+ */
+export function placementsToutes(t: Tonalite, a: Accord): Placement[] {
+  const resultat: Placement[] = [];
+  for (const f of FORMES[a.q]) {
+    const base = placer(t, a, f);
+    for (const octave of [0, 12]) {
+      const frettes = base.frettes.map((x) => (x === null ? null : x + octave));
+      if (frettes.some((x) => x !== null && x > FRETTES_MANCHE)) continue;
+      resultat.push({ forme: f, ancreFrette: base.ancreFrette + octave, frettes });
+    }
+  }
+  return resultat.sort((p, q) => p.ancreFrette - q.ancreFrette);
+}
+
 /** « corde de Mi grave, case 3 » ou « corde de La, à vide ». */
 export const descriptionAncre = (p: Placement): string =>
   `corde de ${NOMS_CORDES[p.forme.ancre]}, ${p.ancreFrette === 0 ? 'à vide' : `case ${p.ancreFrette}`}`;
@@ -292,17 +310,50 @@ const y = (corde: number): number => Y0 + (5 - corde) * ECART;
 const REPERES = [3, 5, 7, 9, 12, 15];
 
 /**
+ * Une forme posée : le trait qui relie ses notes de corde en corde, puis les
+ * points. La fondamentale est un point évidé marqué R, les autres sont pleins
+ * et disent leur intervalle. `ancre` : l'anneau d'or de la première racine.
+ */
+function dessinerForme(t: Tonalite, a: Accord, p: Placement, ancre: boolean): string {
+  const racine = semiAbsolu(t, a);
+  const couleur = couleurForme(p.forme.lettre);
+  const points = p.frettes.flatMap((f, corde) => (f === null ? [] : [`${xCase(f)},${y(corde)}`]));
+  let s = `<polyline points="${points.join(' ')}" fill="none" stroke="${couleur}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  p.frettes.forEach((f, corde) => {
+    if (f === null) return;
+    const cx = xCase(f);
+    const cy = y(corde);
+    const estRacine = mod12(PC_CORDES[corde]! + f) === racine;
+    if (ancre && corde === p.forme.ancre) {
+      s += `<circle cx="${cx}" cy="${cy}" r="13.5" fill="none" stroke="var(--laiton)" stroke-width="2.2"/>`;
+    }
+    const intervalle = INTERVALLES[mod12(PC_CORDES[corde]! + f - racine)] ?? '';
+    if (estRacine) {
+      s += `<circle cx="${cx}" cy="${cy}" r="8" fill="var(--bois-2)" stroke="${couleur}" stroke-width="2.5"/>`;
+      s += `<text x="${cx}" y="${cy + 3.2}" font-size="9" font-weight="700" fill="${couleur}" text-anchor="middle">R</text>`;
+    } else {
+      s += `<circle cx="${cx}" cy="${cy}" r="8" fill="${couleur}"/>`;
+      s += `<text x="${cx}" y="${cy + 3.2}" font-size="9" font-weight="700" fill="#fff" stroke="rgba(0,0,0,0.6)" stroke-width="2.4" paint-order="stroke" text-anchor="middle">${intervalle}</text>`;
+    }
+  });
+  return s;
+}
+
+/**
  * Le manche, à plat, chanterelle en haut et Mi grave en bas, comme quand on
  * regarde sa propre guitare. Sans placement : toutes les racines, nommées.
- * Avec : la forme posée, ses racines en laiton et la première cerclée.
- * Avec une pentatonique : ses notes en fond, nommées, les racines cerclées
- * d'or. Toute la gamme sans forme ; la seule boîte de la forme avec.
+ * Avec : la forme tracée, R, 3 et 5 dans ses points, la première racine
+ * cerclée d'or. Avec une pentatonique : ses notes en fond, nommées ; toute
+ * la gamme colorée par boîte sans forme, la seule boîte de la forme avec.
+ * `toutes` : la carte du CAGED, chaque forme tracée à sa place sur une zone
+ * de sa couleur ; la pentatonique n'y est pas dessinée, les zones la disent.
  */
 export function svgManche(
   t: Tonalite,
   a: Accord,
   p: Placement | null,
   penta: Penta | null = null,
+  toutes: Placement[] | null = null,
 ): string {
   const racine = semiAbsolu(t, a);
   const pref = prefPour(t, a);
@@ -311,8 +362,21 @@ export function svgManche(
   const hauteur = y(0) + 40;
   const haut = y(5) - 11;
   const bas = y(0) + 11;
+  if (toutes) penta = null;
   let s = `<svg viewBox="0 0 ${largeur} ${hauteur}" role="img" aria-label="Le manche pour ${nom}">`;
   s += `<rect x="${X0}" y="${haut}" width="${FRETTES_MANCHE * PAS}" height="${bas - haut}" fill="var(--touche)"/>`;
+  if (toutes) {
+    // Une zone translucide par boîte, qui se fondent là où deux boîtes se recouvrent.
+    const gamme: Penta = a.q === 'min' ? 'min' : 'maj';
+    for (const pl of toutes) {
+      const cases = boitePenta(t, a, gamme, pl, FRETTES_MANCHE + 6).map(([, f]) => f);
+      const debut = Math.max(X0, xCase(Math.min(...cases)) - PAS / 2);
+      const fin = Math.min(X0 + FRETTES_MANCHE * PAS, xCase(Math.max(...cases)) + PAS / 2);
+      if (fin > debut) {
+        s += `<rect x="${debut}" y="${haut}" width="${fin - debut}" height="${bas - haut}" fill="${couleurForme(pl.forme.lettre)}" opacity="0.13"/>`;
+      }
+    }
+  }
   // Repères de touche, en nacre discrète : un point, deux à la douzième.
   for (const f of REPERES) {
     const x = xCase(f);
@@ -358,7 +422,9 @@ export function svgManche(
       s += `<text x="${cx}" y="${cy + 3.2}" font-size="9" font-weight="700" fill="#fff" stroke="rgba(0,0,0,0.6)" stroke-width="2.4" paint-order="stroke" text-anchor="middle">${nomNote(classe, prefGamme)}</text>`;
     }
   }
-  if (!p && !penta) {
+  if (toutes) {
+    for (const pl of toutes) s += dessinerForme(t, a, pl, false);
+  } else if (!p && !penta) {
     for (const [corde, f] of racines(t, a)) {
       s += `<circle cx="${xCase(f)}" cy="${y(corde)}" r="9" fill="var(--laiton)"/>`;
       s += `<text x="${xCase(f)}" y="${y(corde) + 3.5}" font-size="10" font-weight="600" fill="var(--sur-couleur)" text-anchor="middle">${nom}</text>`;
@@ -371,22 +437,13 @@ export function svgManche(
       s += `<circle cx="${xCase(f)}" cy="${y(corde)}" r="9" fill="var(--laiton)"/>`;
       s += `<text x="${xCase(f)}" y="${y(corde) + 3.5}" font-size="10" font-weight="600" fill="var(--sur-couleur)" text-anchor="middle">${nom}</text>`;
     }
-  } else {
+  } else if (p) {
     p.frettes.forEach((f, corde) => {
       if (f === null) {
         s += `<text x="${X0 - 16}" y="${y(corde) + 4}" font-size="12" fill="var(--ivoire-3)" text-anchor="middle">×</text>`;
-        return;
       }
-      // La forme prend sa couleur CAGED ; l'or reste aux racines, en anneau.
-      const estRacine = mod12(PC_CORDES[corde]! + f) === racine;
-      if (corde === p.forme.ancre) {
-        s += `<circle cx="${xCase(f)}" cy="${y(corde)}" r="13.5" fill="none" stroke="var(--laiton)" stroke-width="2.2"/>`;
-      }
-      s += `<circle cx="${xCase(f)}" cy="${y(corde)}" r="8" fill="${couleurForme(p.forme.lettre)}"${estRacine ? ' stroke="var(--laiton)" stroke-width="2.4"' : ''}/>`;
-      // R, 3, 5 dans le point, en blanc cerné de sombre : lisible sur les cinq couleurs, dans les deux thèmes.
-      const intervalle = INTERVALLES[mod12(PC_CORDES[corde]! + f - racine)] ?? '';
-      s += `<text x="${xCase(f)}" y="${y(corde) + 3.2}" font-size="9" font-weight="700" fill="#fff" stroke="rgba(0,0,0,0.6)" stroke-width="2.4" paint-order="stroke" text-anchor="middle">${intervalle}</text>`;
     });
+    s += dessinerForme(t, a, p, true);
   }
   return s + '</svg>';
 }
