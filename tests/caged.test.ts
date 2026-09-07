@@ -4,6 +4,7 @@ import {
   FORMES,
   FRETTES_MANCHE,
   boitePenta,
+  boitesParNote,
   descriptionAncre,
   forme,
   lettreCaged,
@@ -212,9 +213,11 @@ test('avec une forme, la pentatonique se limite à sa boîte : deux notes par co
   // Sans forme, toute la gamme ; avec, douze notes seulement.
   const avecForme = svgManche(SOL, { rel: 0, q: 'maj' }, E, 'maj');
   const sansForme = svgManche(SOL, { rel: 0, q: 'maj' }, null, 'maj');
-  const points = (svg: string) =>
-    (svg.match(/stroke="var\(--ivoire-3\)" stroke-width="1"\/>/g) ?? []).length;
-  assert.ok(points(sansForme) > points(avecForme));
+  const noms = (svg: string) => (svg.match(/font-size="9"[^>]*>[A-G][#b]?<\/text>/g) ?? []).length;
+  assert.ok(
+    noms(sansForme) > 30 && noms(avecForme) === 12,
+    `${noms(sansForme)} / ${noms(avecForme)}`,
+  );
 });
 
 test('un doigté de référence connaît sa forme CAGED', () => {
@@ -259,4 +262,28 @@ test('les points d’une forme disent ce qu’ils jouent : R, 3, 5, et b3 ou b7 
   const D7 = placer(SOL, { rel: 7, q: 'dom7' }, forme('dom7', 'D')!);
   assert.deepEqual(etiquettes(svgManche(SOL, { rel: 7, q: 'dom7' }, D7)), ['R', '5', 'b7', '3']);
   assert.deepEqual(etiquettes(svgManche(SOL, { rel: 0, q: 'maj' }, null)), []);
+});
+
+test('sur tout le manche, chaque note sait à quelles boîtes elle appartient, deux aux angles', () => {
+  const DO: Tonalite = { tonique: 0, mode: 'maj' };
+  const boites = boitesParNote(DO, { rel: 0, q: 'maj' }, 'maj');
+  assert.deepEqual(boites.get('1:0'), ['C'], 'La à vide : la boîte de Do seule');
+  assert.deepEqual(boites.get('1:3'), ['C', 'A'], 'Do case 3, corde de La : Do et La');
+  assert.deepEqual(boites.get('0:8'), ['G', 'E'], 'Do case 8, Mi grave : Sol et Mi');
+  assert.deepEqual(boites.get('2:10'), ['E', 'D'], 'Do case 10, corde de Ré : Mi et Ré');
+  assert.deepEqual(boites.get('1:15'), ['C', 'A'], 'Do case 15 : les boîtes une octave plus haut');
+  // Aucune note de la gamme n'est orpheline en majeur : les cinq boîtes couvrent le manche.
+  for (const [corde, f] of notesPenta(DO, { rel: 0, q: 'maj' }, 'maj')) {
+    assert.ok(boites.has(`${corde}:${f}`), `note orpheline corde ${corde} case ${f}`);
+  }
+  // Le dessin sans forme porte des demi-disques ; avec une forme, non.
+  const sans = svgManche(DO, { rel: 0, q: 'maj' }, null, 'maj');
+  assert.match(sans, /A8 8 0 0 0/);
+  const avec = svgManche(
+    DO,
+    { rel: 0, q: 'maj' },
+    placer(DO, { rel: 0, q: 'maj' }, forme('maj', 'E')!),
+    'maj',
+  );
+  assert.doesNotMatch(avec, /A8 8 0 0 0/);
 });

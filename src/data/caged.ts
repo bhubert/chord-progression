@@ -186,12 +186,17 @@ export const relativePenta = (
 });
 
 /** Toutes les notes de la gamme sur le manche : `[corde, case, classe de hauteur]`. */
-export function notesPenta(t: Tonalite, a: Accord, penta: Penta): [number, number, number][] {
+export function notesPenta(
+  t: Tonalite,
+  a: Accord,
+  penta: Penta,
+  jusqua: number = FRETTES_MANCHE,
+): [number, number, number][] {
   const racine = semiAbsolu(t, a);
   const classes = new Set(PENTATONIQUES[penta].map((i) => mod12(racine + i)));
   const resultat: [number, number, number][] = [];
   for (let corde = 0; corde < 6; corde++) {
-    for (let f = 0; f <= FRETTES_MANCHE; f++) {
+    for (let f = 0; f <= jusqua; f++) {
       const classe = mod12(PC_CORDES[corde]! + f);
       if (classes.has(classe)) resultat.push([corde, f, classe]);
     }
@@ -210,13 +215,14 @@ export function boitePenta(
   a: Accord,
   penta: Penta,
   p: Placement,
+  jusqua: number = FRETTES_MANCHE,
 ): [number, number, number][] {
   const posees = p.frettes.filter((f): f is number => f !== null);
   const bas = Math.min(...posees);
   const haut = Math.max(...posees);
   const centre = (bas + haut) / 2;
   const distance = (f: number) => (f < bas ? bas - f : f > haut ? f - haut : 0);
-  const toutes = notesPenta(t, a, penta);
+  const toutes = notesPenta(t, a, penta, jusqua);
   const resultat: [number, number, number][] = [];
   for (let corde = 0; corde < 6; corde++) {
     const surCorde = toutes
@@ -230,6 +236,47 @@ export function boitePenta(
       .slice(0, 2)
       .sort((x, y) => x[1] - y[1]);
     resultat.push(...surCorde);
+  }
+  return resultat;
+}
+
+/**
+ * Pour chaque note de la gamme sur le manche, les formes dont la boîte la
+ * contient, de la boîte la plus basse à la plus haute. Une note d'angle
+ * appartient à deux boîtes voisines : c'est ainsi que les cinq se raccordent.
+ *
+ * Chaque forme est posée à sa place, puis une octave plus haut si elle tient
+ * encore sur le manche. Les boîtes sont calculées au-delà de la dernière case
+ * dessinée, sinon une boîte coupée par le bord irait chercher ses deux notes
+ * par corde trop bas, dans la boîte d'en dessous.
+ */
+export function boitesParNote(t: Tonalite, a: Accord, penta: Penta): Map<string, Lettre[]> {
+  const audela = FRETTES_MANCHE + 6;
+  const trouvees = new Map<string, { lettre: Lettre; bas: number }[]>();
+  for (const f of FORMES[a.q]) {
+    const base = placer(t, a, f);
+    for (const octave of [0, 12]) {
+      const p: Placement = {
+        ...base,
+        ancreFrette: base.ancreFrette + octave,
+        frettes: base.frettes.map((x) => (x === null ? null : x + octave)),
+      };
+      const bas = Math.min(...p.frettes.filter((x): x is number => x !== null));
+      if (bas > FRETTES_MANCHE) continue;
+      for (const [corde, frette] of boitePenta(t, a, penta, p, audela)) {
+        if (frette > FRETTES_MANCHE) continue;
+        const cle = `${corde}:${frette}`;
+        const liste = trouvees.get(cle) ?? [];
+        if (!liste.some((x) => x.lettre === f.lettre && x.bas === bas))
+          liste.push({ lettre: f.lettre, bas });
+        trouvees.set(cle, liste);
+      }
+    }
+  }
+  const resultat = new Map<string, Lettre[]>();
+  for (const [cle, liste] of trouvees) {
+    liste.sort((x, y) => x.bas - y.bas);
+    resultat.set(cle, [...new Set(liste.map((x) => x.lettre))]);
   }
   return resultat;
 }
@@ -286,15 +333,41 @@ export function svgManche(
   if (penta) {
     const prefGamme = prefPenta(t, a, penta);
     const notes = p ? boitePenta(t, a, penta, p) : notesPenta(t, a, penta);
+    // Sans forme posée, chaque note prend la couleur de sa boîte, deux
+    // demi-disques quand deux boîtes voisines se la partagent.
+    const boites = p ? null : boitesParNote(t, a, penta);
     for (const [corde, f, classe] of notes) {
       const estRacine = classe === racine;
-      if (estRacine && !p) continue; // dessinée en grand juste après
-      s += `<circle cx="${xCase(f)}" cy="${y(corde)}" r="8" fill="var(--bois-3)" stroke="var(${estRacine ? '--laiton' : '--ivoire-3'})" stroke-width="${estRacine ? 1.8 : 1}"/>`;
-      s += `<text x="${xCase(f)}" y="${y(corde) + 3.2}" font-size="9" font-weight="500" fill="var(${estRacine ? '--laiton' : '--ivoire-2'})" text-anchor="middle">${nomNote(classe, prefGamme)}</text>`;
+      const cx = xCase(f);
+      const cy = y(corde);
+      const lettres = boites?.get(`${corde}:${f}`) ?? [];
+      if (lettres.length === 0) {
+        if (estRacine && !p) continue; // dessinée en grand juste après
+        s += `<circle cx="${cx}" cy="${cy}" r="8" fill="var(--bois-3)" stroke="var(${estRacine ? '--laiton' : '--ivoire-3'})" stroke-width="${estRacine ? 1.8 : 1}"/>`;
+        s += `<text x="${cx}" y="${cy + 3.2}" font-size="9" font-weight="500" fill="var(${estRacine ? '--laiton' : '--ivoire-2'})" text-anchor="middle">${nomNote(classe, prefGamme)}</text>`;
+        continue;
+      }
+      if (lettres.length === 1) {
+        s += `<circle cx="${cx}" cy="${cy}" r="8" fill="${couleurForme(lettres[0]!)}"/>`;
+      } else {
+        s += `<path d="M${cx} ${cy - 8}A8 8 0 0 0 ${cx} ${cy + 8}Z" fill="${couleurForme(lettres[0]!)}"/>`;
+        s += `<path d="M${cx} ${cy - 8}A8 8 0 0 1 ${cx} ${cy + 8}Z" fill="${couleurForme(lettres[1]!)}"/>`;
+      }
+      if (estRacine)
+        s += `<circle cx="${cx}" cy="${cy}" r="8" fill="none" stroke="var(--laiton)" stroke-width="2.4"/>`;
+      s += `<text x="${cx}" y="${cy + 3.2}" font-size="9" font-weight="700" fill="#fff" stroke="rgba(0,0,0,0.6)" stroke-width="2.4" paint-order="stroke" text-anchor="middle">${nomNote(classe, prefGamme)}</text>`;
     }
   }
-  if (!p) {
+  if (!p && !penta) {
     for (const [corde, f] of racines(t, a)) {
+      s += `<circle cx="${xCase(f)}" cy="${y(corde)}" r="9" fill="var(--laiton)"/>`;
+      s += `<text x="${xCase(f)}" y="${y(corde) + 3.5}" font-size="10" font-weight="600" fill="var(--sur-couleur)" text-anchor="middle">${nom}</text>`;
+    }
+  } else if (!p) {
+    // Une racine hors de toute boîte (mineur : trois formes seulement) reste dessinée en grand.
+    const boites = boitesParNote(t, a, penta!);
+    for (const [corde, f] of racines(t, a)) {
+      if (boites.has(`${corde}:${f}`)) continue;
       s += `<circle cx="${xCase(f)}" cy="${y(corde)}" r="9" fill="var(--laiton)"/>`;
       s += `<text x="${xCase(f)}" y="${y(corde) + 3.5}" font-size="10" font-weight="600" fill="var(--sur-couleur)" text-anchor="middle">${nom}</text>`;
     }

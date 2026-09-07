@@ -32,7 +32,10 @@ Site : <https://grille-accords.pages.dev>
   trois formes ; pour un diminué, les racines seulement. La pentatonique,
   majeure ou mineure, se dessine par-dessus avec ses cinq notes nommées : on
   voit la boîte que chaque forme découpe, et la relative qui partage les
-  mêmes notes.
+  mêmes notes. Sans forme choisie, chaque note de la gamme prend la couleur
+  de la boîte CAGED où elle se trouve, deux demi-disques quand deux boîtes
+  voisines se la partagent : les cinq boîtes et leurs raccords, sur tout le
+  manche.
 - **Les septièmes.** Sous les accords de la tonalité, les trois septièmes de
   dominante du blues (I7, IV7, V7), avec leurs doigtés ouverts.
 - **Les degrés.** Deux écritures au choix, mémorisées : « I, vi », l'usage des
