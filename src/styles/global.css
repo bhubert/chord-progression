@@ -583,17 +583,6 @@ a {
 .diagramme.dom7 {
   --point: var(--septieme);
 }
-/* La forme CAGED du doigté, dans sa couleur, en coin. */
-.badge-caged {
-  position: absolute;
-  top: 2px;
-  right: 0;
-  font: 700 12px/1 var(--police-accord);
-  color: var(--sur-couleur);
-  background: var(--caged, var(--ivoire));
-  border-radius: 4px;
-  padding: 3px 5px 2px;
-}
 .diagramme svg {
   width: 94px;
   height: auto;

@@ -117,7 +117,9 @@ dans `tsconfig.json`), et aucun accès au DOM dans `theorie.ts`, `positions.ts`,
 - **Une couleur par forme CAGED**, cinq variables `--caged-*`. C rouge, A
   jaune, G vert, E bleu, D violet : un choix, pas une norme (FaChords alterne
   rouge et bleu, Triads & CAGED met C en bleu). Tout passe par ces variables,
-  y compris le SVG du manche.
+  y compris le SVG du manche. Pas de badge de forme sur les diagrammes de
+  positions : il chevauchait les cordes à vide et l'utilisateur n'en voulait
+  pas là. `lettreCaged` reste, testée, pour le jour où ça servira ailleurs.
 - **Aucune dépendance côté navigateur.** Web Audio et SVG maison. Le script
   pèse 16 ko avant compression ; une bibliothèque de son ou de diagrammes
   coûterait plus qu'elle n'apporte.

@@ -145,8 +145,8 @@ request vers `main` (contrôles sans déploiement).
   d'un accord (mineur bleu, diminué mauve, septième orange, jusqu'au liseré
   de chaque mesure), l'ambiance d'une progression (filtres et étiquettes),
   la forme CAGED.
-- **Une couleur par forme CAGED**, la même partout : boutons du manche, forme
-  dessinée, badge sur les diagrammes de positions. C rouge, A jaune, G vert,
+- **Une couleur par forme CAGED**, la même partout : boutons du manche et
+  forme dessinée. C rouge, A jaune, G vert,
   E bleu, D violet, l'arc-en-ciel dans l'ordre des formes. Il n'existe pas de
   norme ; pour en suivre une autre, changer les cinq variables `--caged-*`.
 - **Polices auto-hébergées.** Gloock pour les titres, Barlow pour l'interface,

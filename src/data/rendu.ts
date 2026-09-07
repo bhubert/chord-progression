@@ -36,7 +36,6 @@ import {
   NOMS_PENTA,
   descriptionAncre,
   forme,
-  lettreCaged,
   nomsPenta,
   placer,
   relativePenta,
@@ -181,13 +180,10 @@ export function htmlPositions({ tonalite: t, grille }: Etat): string {
     return '<p class="sous">Les positions des accords de la grille s’afficheront ici.</p>';
   }
   return accords
-    .map((a) => {
-      const lettre = lettreCaged(t, a);
-      const badge = lettre
-        ? `<span class="badge-caged" data-forme="${lettre}" title="${NOMS_FORMES[lettre]}">${lettre}</span>`
-        : '';
-      return `<figure class="diagramme ${a.q}">${badge}${svgDiagramme(t, a)}<figcaption class="nom ${a.q}">${nomAccord(t, a)}</figcaption></figure>`;
-    })
+    .map(
+      (a) =>
+        `<figure class="diagramme ${a.q}">${svgDiagramme(t, a)}<figcaption class="nom ${a.q}">${nomAccord(t, a)}</figcaption></figure>`,
+    )
     .join('');
 }
 
