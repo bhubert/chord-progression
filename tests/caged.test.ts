@@ -301,7 +301,10 @@ test('la carte des formes : cinq en Do, plus celle de Do une octave plus haut, t
   // Un segment par paire de cordes jouées : 4 + 4 + 5 + 5 + 3 + 4.
   assert.equal((svg.match(/<line [^>]*stroke="var\(--caged-/g) ?? []).length, 25, 'les traits');
   assert.equal((svg.match(/opacity="0.13"/g) ?? []).length, 6, 'une zone par forme');
-  assert.doesNotMatch(svg, /font-weight="500"/, 'pas de pentatonique dans la carte');
+  // Avec la pentatonique, ses notes nommées sont dessinées sous les formes ; sans, non.
+  const noms = (x: string) => (x.match(/font-size="9"[^>]*>[A-G][#b]?<\/text>/g) ?? []).length;
+  assert.ok(noms(svg) > 30, 'la gamme sous la carte');
+  assert.equal(noms(svgManche(DO, { rel: 0, q: 'maj' }, null, null, carte)), 0);
   // Une forme seule est tracée aussi, et sa fondamentale est un point évidé marqué R.
   const seule = svgManche(
     DO,

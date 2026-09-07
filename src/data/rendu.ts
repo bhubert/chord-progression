@@ -333,12 +333,14 @@ export function htmlManche(etat: Etat): string {
   } else {
     phrase = `Les racines de <b>${nomAccord(t, a)}</b> sur tout le manche. Choisissez une forme pour voir où la poser${a.q === 'min' ? '. En mineur, trois formes suffisent : Mi, La et Ré' : ''}.`;
   }
-  if (penta && !carte) {
+  if (penta) {
     const relative = relativePenta(t, a, penta);
     phrase += ` <b>Pentatonique ${NOMS_PENTA[penta]} de ${racine(t, a)}</b> : ${nomsPenta(t, a, penta).join(', ')}. Ce sont les mêmes notes que la pentatonique ${NOMS_PENTA[relative.penta]} de ${relative.nom}.${
       p
         ? ' Ici, seulement la boîte de la forme : deux notes par corde.'
-        : ' Chaque note prend la couleur de la boîte où elle se trouve, deux couleurs quand deux boîtes voisines se la partagent ; l’anneau doré marque les racines.'
+        : carte
+          ? ' Ses notes sont dessinées sous les formes, chacune à la couleur de sa boîte.'
+          : ' Chaque note prend la couleur de la boîte où elle se trouve, deux couleurs quand deux boîtes voisines se la partagent ; l’anneau doré marque les racines.'
     }`;
   }
   return `<div class="manche-choix"><div class="choix-groupe" role="group" aria-label="Accord regardé">${choix}</div>${reglagePenta}</div>

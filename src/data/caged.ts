@@ -436,7 +436,8 @@ function dessinerCarte(t: Tonalite, a: Accord, carte: Placement[]): string {
  * cerclée d'or. Avec une pentatonique : ses notes en fond, nommées ; toute
  * la gamme colorée par boîte sans forme, la seule boîte de la forme avec.
  * `toutes` : la carte du CAGED, chaque forme tracée à sa place sur une zone
- * de sa couleur ; la pentatonique n'y est pas dessinée, les zones la disent.
+ * de sa couleur ; la pentatonique, si elle est demandée, se dessine dessous,
+ * colorée par boîte, et les formes viennent par-dessus.
  */
 export function svgManche(
   t: Tonalite,
@@ -452,7 +453,6 @@ export function svgManche(
   const hauteur = y(0) + 40;
   const haut = y(5) - 11;
   const bas = y(0) + 11;
-  if (toutes) penta = null;
   let s = `<svg viewBox="0 0 ${largeur} ${hauteur}" role="img" aria-label="Le manche pour ${nom}">`;
   s += `<rect x="${X0}" y="${haut}" width="${FRETTES_MANCHE * PAS}" height="${bas - haut}" fill="var(--touche)"/>`;
   if (toutes) {
