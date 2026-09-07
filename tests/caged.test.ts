@@ -298,7 +298,8 @@ test('la carte des formes : cinq en Do, plus celle de Do une octave plus haut, t
     ['C3', 'A3', 'G8', 'E8', 'D10', 'C15'],
   );
   const svg = svgManche(DO, { rel: 0, q: 'maj' }, null, 'maj', carte);
-  assert.equal((svg.match(/<polyline /g) ?? []).length, 6, 'un trait par forme');
+  // Un segment par paire de cordes jouées : 4 + 4 + 5 + 5 + 3 + 4.
+  assert.equal((svg.match(/<line [^>]*stroke="var\(--caged-/g) ?? []).length, 25, 'les traits');
   assert.equal((svg.match(/opacity="0.13"/g) ?? []).length, 6, 'une zone par forme');
   assert.doesNotMatch(svg, /font-weight="500"/, 'pas de pentatonique dans la carte');
   // Une forme seule est tracée aussi, et sa fondamentale est un point évidé marqué R.
@@ -307,8 +308,18 @@ test('la carte des formes : cinq en Do, plus celle de Do une octave plus haut, t
     { rel: 0, q: 'maj' },
     placer(DO, { rel: 0, q: 'maj' }, forme('maj', 'C')!),
   );
-  assert.equal((seule.match(/<polyline /g) ?? []).length, 1);
+  assert.equal((seule.match(/<line [^>]*stroke="var\(--caged-c\)"/g) ?? []).length, 4);
   assert.match(seule, /fill="var\(--bois-2\)" stroke="var\(--caged-c\)"/);
   // Trois formes en mineur.
   assert.equal(placementsToutes(DO, { rel: 9, q: 'min' }).length >= 3, true);
+});
+
+test('en Sol, la forme de Ré reste visible sous celle de Do : demi-disques et pointillés', () => {
+  const carte = placementsToutes(SOL, { rel: 0, q: 'maj' });
+  const svg = svgManche(SOL, { rel: 0, q: 'maj' }, null, null, carte);
+  // Do en case 10 et Ré en case 5 partagent trois notes : Sol case 7, Si case 8, Mi aigu case 7.
+  assert.ok((svg.match(/A8 8 0 0 0/g) ?? []).length >= 3, 'demi-disques');
+  assert.ok((svg.match(/stroke-dasharray/g) ?? []).length >= 2, 'segments partagés en pointillés');
+  // La forme de Ré a bien ses quatre notes, et le point partagé porte les deux couleurs.
+  assert.match(svg, /fill="var\(--caged-d\)"\/><path d="[^"]+" fill="var\(--caged-c\)"/);
 });

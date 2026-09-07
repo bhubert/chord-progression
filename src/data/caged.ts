@@ -310,32 +310,122 @@ const y = (corde: number): number => Y0 + (5 - corde) * ECART;
 const REPERES = [3, 5, 7, 9, 12, 15];
 
 /**
- * Une forme posée : le trait qui relie ses notes de corde en corde, puis les
- * points. La fondamentale est un point évidé marqué R, les autres sont pleins
- * et disent leur intervalle. `ancre` : l'anneau d'or de la première racine.
+ * Un point de forme. Une couleur : disque plein, ou évidé pour une
+ * fondamentale marquée R. Deux couleurs : deux demi-disques, la forme la
+ * plus basse à gauche, comme pour la pentatonique. Ce sont les notes que
+ * deux formes voisines se partagent, là où l'on passe de l'une à l'autre.
+ */
+function dessinerPoint(
+  cx: number,
+  cy: number,
+  couleurs: string[],
+  estRacine: boolean,
+  intervalle: string,
+): string {
+  const [c0, c1] = couleurs;
+  let s = '';
+  if (couleurs.length === 1 || !c1) {
+    s += estRacine
+      ? `<circle cx="${cx}" cy="${cy}" r="8" fill="var(--bois-2)" stroke="${c0}" stroke-width="2.5"/>`
+      : `<circle cx="${cx}" cy="${cy}" r="8" fill="${c0}"/>`;
+  } else {
+    const gauche = `M${cx} ${cy - 8}A8 8 0 0 0 ${cx} ${cy + 8}`;
+    const droite = `M${cx} ${cy - 8}A8 8 0 0 1 ${cx} ${cy + 8}`;
+    if (estRacine) {
+      s += `<circle cx="${cx}" cy="${cy}" r="8" fill="var(--bois-2)"/>`;
+      s += `<path d="${gauche}" fill="none" stroke="${c0}" stroke-width="2.5"/>`;
+      s += `<path d="${droite}" fill="none" stroke="${c1}" stroke-width="2.5"/>`;
+    } else {
+      s += `<path d="${gauche}Z" fill="${c0}"/><path d="${droite}Z" fill="${c1}"/>`;
+    }
+  }
+  s += estRacine
+    ? `<text x="${cx}" y="${cy + 3.2}" font-size="9" font-weight="700" fill="${c0}" text-anchor="middle">R</text>`
+    : `<text x="${cx}" y="${cy + 3.2}" font-size="9" font-weight="700" fill="#fff" stroke="rgba(0,0,0,0.6)" stroke-width="2.4" paint-order="stroke" text-anchor="middle">${intervalle}</text>`;
+  return s;
+}
+
+/**
+ * Le trait d'une forme, de corde en corde. Un segment déjà tracé par une
+ * autre forme est repris en pointillés : l'autre couleur reste visible dans
+ * les creux, et les deux formes se lisent.
+ */
+function dessinerTrait(p: Placement, segmentsVus: Set<string> | null): string {
+  const couleur = couleurForme(p.forme.lettre);
+  const points = p.frettes.flatMap((f, corde) =>
+    f === null ? [] : [[xCase(f), y(corde)] as const],
+  );
+  let s = '';
+  for (let i = 1; i < points.length; i++) {
+    const [x1, y1] = points[i - 1]!;
+    const [x2, y2] = points[i]!;
+    const cle = `${x1},${y1}-${x2},${y2}`;
+    const deja = segmentsVus?.has(cle) ?? false;
+    segmentsVus?.add(cle);
+    s += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${couleur}" stroke-width="2.5" stroke-linecap="round"${deja ? ' stroke-dasharray="5 5"' : ''}/>`;
+  }
+  return s;
+}
+
+/**
+ * Une forme posée : le trait, puis les points. La fondamentale est un point
+ * évidé marqué R, les autres sont pleins et disent leur intervalle. `ancre` :
+ * l'anneau d'or de la première racine.
  */
 function dessinerForme(t: Tonalite, a: Accord, p: Placement, ancre: boolean): string {
   const racine = semiAbsolu(t, a);
   const couleur = couleurForme(p.forme.lettre);
-  const points = p.frettes.flatMap((f, corde) => (f === null ? [] : [`${xCase(f)},${y(corde)}`]));
-  let s = `<polyline points="${points.join(' ')}" fill="none" stroke="${couleur}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  let s = dessinerTrait(p, null);
   p.frettes.forEach((f, corde) => {
     if (f === null) return;
     const cx = xCase(f);
     const cy = y(corde);
-    const estRacine = mod12(PC_CORDES[corde]! + f) === racine;
     if (ancre && corde === p.forme.ancre) {
       s += `<circle cx="${cx}" cy="${cy}" r="13.5" fill="none" stroke="var(--laiton)" stroke-width="2.2"/>`;
     }
-    const intervalle = INTERVALLES[mod12(PC_CORDES[corde]! + f - racine)] ?? '';
-    if (estRacine) {
-      s += `<circle cx="${cx}" cy="${cy}" r="8" fill="var(--bois-2)" stroke="${couleur}" stroke-width="2.5"/>`;
-      s += `<text x="${cx}" y="${cy + 3.2}" font-size="9" font-weight="700" fill="${couleur}" text-anchor="middle">R</text>`;
-    } else {
-      s += `<circle cx="${cx}" cy="${cy}" r="8" fill="${couleur}"/>`;
-      s += `<text x="${cx}" y="${cy + 3.2}" font-size="9" font-weight="700" fill="#fff" stroke="rgba(0,0,0,0.6)" stroke-width="2.4" paint-order="stroke" text-anchor="middle">${intervalle}</text>`;
-    }
+    const estRacine = mod12(PC_CORDES[corde]! + f) === racine;
+    s += dessinerPoint(
+      cx,
+      cy,
+      [couleur],
+      estRacine,
+      INTERVALLES[mod12(PC_CORDES[corde]! + f - racine)] ?? '',
+    );
   });
+  return s;
+}
+
+/**
+ * La carte : tous les traits d'abord, en pointillés là où deux formes
+ * passent par le même segment, puis les points, en demi-disques là où deux
+ * formes se partagent une note.
+ */
+function dessinerCarte(t: Tonalite, a: Accord, carte: Placement[]): string {
+  const racine = semiAbsolu(t, a);
+  const segments = new Set<string>();
+  let s = carte.map((p) => dessinerTrait(p, segments)).join('');
+  const couleursParNote = new Map<string, string[]>();
+  for (const p of carte) {
+    p.frettes.forEach((f, corde) => {
+      if (f === null) return;
+      const cle = `${corde}:${f}`;
+      const liste = couleursParNote.get(cle) ?? [];
+      const couleur = couleurForme(p.forme.lettre);
+      if (!liste.includes(couleur)) liste.push(couleur);
+      couleursParNote.set(cle, liste);
+    });
+  }
+  for (const [cle, couleurs] of couleursParNote) {
+    const [corde, f] = cle.split(':').map(Number) as [number, number];
+    const estRacine = mod12(PC_CORDES[corde]! + f) === racine;
+    s += dessinerPoint(
+      xCase(f),
+      y(corde),
+      couleurs,
+      estRacine,
+      INTERVALLES[mod12(PC_CORDES[corde]! + f - racine)] ?? '',
+    );
+  }
   return s;
 }
 
@@ -423,7 +513,7 @@ export function svgManche(
     }
   }
   if (toutes) {
-    for (const pl of toutes) s += dessinerForme(t, a, pl, false);
+    s += dessinerCarte(t, a, toutes);
   } else if (!p && !penta) {
     for (const [corde, f] of racines(t, a)) {
       s += `<circle cx="${xCase(f)}" cy="${y(corde)}" r="9" fill="var(--laiton)"/>`;
