@@ -27,7 +27,8 @@ Site : <https://grille-accords.pages.dev>
 - **Le manche.** Pour un accord de la grille, toutes ses racines sur quinze
   cases, et les cinq formes du CAGED (Do, La, Sol, Mi, Ré) avec, pour chacune,
   la corde et la case où poser la première racine. Cliquer une forme la dessine
-  sur le manche, cercle cette première racine et la fait sonner. En mineur,
+  sur le manche, cercle cette première racine et la fait sonner. Chaque point
+  de la forme dit ce qu'il joue : R, 3, 5, et b3, b5 ou b7 selon la qualité. En mineur,
   trois formes ; pour un diminué, les racines seulement. La pentatonique,
   majeure ou mineure, se dessine par-dessus avec ses cinq notes nommées : on
   voit la boîte que chaque forme découpe, et la relative qui partage les

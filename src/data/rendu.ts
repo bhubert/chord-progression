@@ -312,7 +312,13 @@ export function htmlManche(etat: Etat): string {
     .join('')}</div></div>`;
   let phrase: string;
   if (p) {
-    phrase = `<b>${NOMS_FORMES[p.forme.lettre][0]!.toUpperCase()}${NOMS_FORMES[p.forme.lettre].slice(1)} pour ${nomAccord(t, a)}</b> : posez la première racine sur la ${descriptionAncre(p)}, le reste de la forme suit. Sur le manche, l’anneau la marque, et les points dorés sont les autres racines.`;
+    const legende =
+      a.q === 'min'
+        ? 'R la fondamentale, b3 la tierce mineure, 5 la quinte'
+        : a.q === 'dom7'
+          ? 'R la fondamentale, 3 la tierce, 5 la quinte, b7 la septième'
+          : 'R la fondamentale, 3 la tierce, 5 la quinte';
+    phrase = `<b>${NOMS_FORMES[p.forme.lettre][0]!.toUpperCase()}${NOMS_FORMES[p.forme.lettre].slice(1)} pour ${nomAccord(t, a)}</b> : posez la première racine sur la ${descriptionAncre(p)}, le reste de la forme suit. L’anneau la marque, et dans chaque point : ${legende}.`;
   } else if (a.q === 'dim') {
     phrase = `Pas de forme CAGED pour un accord diminué : voici les racines de <b>${nomAccord(t, a)}</b>, c’est déjà ce qu’il faut pour le trouver.`;
   } else {

@@ -115,6 +115,16 @@ export function lettreCaged(t: Tonalite, a: Accord): Lettre | null {
   return null;
 }
 
+/** Ce que joue chaque note d'une forme, en demi-tons depuis la fondamentale. */
+export const INTERVALLES: Record<number, string> = {
+  0: 'R',
+  3: 'b3',
+  4: '3',
+  6: 'b5',
+  7: '5',
+  10: 'b7',
+};
+
 /** La variable CSS de la couleur d'une forme : `var(--caged-e)`. */
 export const couleurForme = (lettre: Lettre): string => `var(--caged-${lettre.toLowerCase()})`;
 
@@ -300,6 +310,9 @@ export function svgManche(
         s += `<circle cx="${xCase(f)}" cy="${y(corde)}" r="13.5" fill="none" stroke="var(--laiton)" stroke-width="2.2"/>`;
       }
       s += `<circle cx="${xCase(f)}" cy="${y(corde)}" r="8" fill="${couleurForme(p.forme.lettre)}"${estRacine ? ' stroke="var(--laiton)" stroke-width="2.4"' : ''}/>`;
+      // R, 3, 5 dans le point, en blanc cerné de sombre : lisible sur les cinq couleurs, dans les deux thèmes.
+      const intervalle = INTERVALLES[mod12(PC_CORDES[corde]! + f - racine)] ?? '';
+      s += `<text x="${xCase(f)}" y="${y(corde) + 3.2}" font-size="9" font-weight="700" fill="#fff" stroke="rgba(0,0,0,0.6)" stroke-width="2.4" paint-order="stroke" text-anchor="middle">${intervalle}</text>`;
     });
   }
   return s + '</svg>';

@@ -234,3 +234,29 @@ test('un doigté de référence connaît sa forme CAGED', () => {
   assert.equal(lettre(11, 'dim'), null);
   assert.equal(lettreCaged(DO, { rel: 0, q: 'maj' }), 'C');
 });
+
+test('les points d’une forme disent ce qu’ils jouent : R, 3, 5, et b3 ou b7 selon la qualité', () => {
+  const etiquettes = (svg: string) =>
+    [...svg.matchAll(/paint-order="stroke" text-anchor="middle">([^<]*)</g)].map((m) => m[1]);
+  const E = placer(SOL, { rel: 0, q: 'maj' }, forme('maj', 'E')!);
+  assert.deepEqual(etiquettes(svgManche(SOL, { rel: 0, q: 'maj' }, E)), [
+    'R',
+    '5',
+    'R',
+    '3',
+    '5',
+    'R',
+  ]);
+  const Em = placer(SOL, { rel: 9, q: 'min' }, forme('min', 'E')!);
+  assert.deepEqual(etiquettes(svgManche(SOL, { rel: 9, q: 'min' }, Em)), [
+    'R',
+    '5',
+    'R',
+    'b3',
+    '5',
+    'R',
+  ]);
+  const D7 = placer(SOL, { rel: 7, q: 'dom7' }, forme('dom7', 'D')!);
+  assert.deepEqual(etiquettes(svgManche(SOL, { rel: 7, q: 'dom7' }, D7)), ['R', '5', 'b7', '3']);
+  assert.deepEqual(etiquettes(svgManche(SOL, { rel: 0, q: 'maj' }, null)), []);
+});
