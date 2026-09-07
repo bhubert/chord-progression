@@ -29,6 +29,7 @@
 import {
   adresse,
   basculerSeptiemes,
+  deplacer,
   lireAdresse,
   nomTonalite,
   transposerMode,
@@ -139,6 +140,77 @@ function toutRendre(): void {
   rendreRythmique();
   ecrireAdresse();
 }
+
+// ── Glisser-déposer des mesures ────────────────────────────────────────────
+//
+// Pointer Events, donc souris et doigt. Un déplacement de moins de six pixels
+// reste un clic, qui retire la mesure ; au-delà, la mesure suit le pointeur,
+// un repère doré montre où elle se posera, et le clic qui suit le lâcher est
+// ignoré. La mesure glissée ne reçoit plus les événements de pointeur
+// (`pointer-events: none`), sinon `elementFromPoint` la renverrait elle-même.
+
+let glissement: {
+  de: number;
+  vers: number;
+  el: HTMLElement;
+  x0: number;
+  y0: number;
+  actif: boolean;
+} | null = null;
+let vientDeGlisser = false;
+
+function effacerReperes(): void {
+  document
+    .querySelectorAll('.mesure.cible-avant, .mesure.cible-apres')
+    .forEach((m) => m.classList.remove('cible-avant', 'cible-apres'));
+}
+
+function finirGlissement(e: PointerEvent): void {
+  if (!glissement) return;
+  const { de, vers, el, actif } = glissement;
+  glissement = null;
+  el.style.transform = '';
+  el.classList.remove('glisse');
+  effacerReperes();
+  if (!actif) return;
+  vientDeGlisser = true;
+  window.setTimeout(() => (vientDeGlisser = false), 0);
+  if (e.type === 'pointercancel') return;
+  etat.grille = deplacer(etat.grille, de, vers);
+  rendreGrilleEtSuite();
+}
+
+$('#grille').addEventListener('pointerdown', (e) => {
+  const el = (e.target as HTMLElement).closest<HTMLElement>('.mesure[data-i]');
+  if (!el || e.button !== 0) return;
+  const de = Number(el.dataset.i);
+  glissement = { de, vers: de, el, x0: e.clientX, y0: e.clientY, actif: false };
+  el.setPointerCapture(e.pointerId);
+});
+
+$('#grille').addEventListener('pointermove', (e) => {
+  if (!glissement) return;
+  const dx = e.clientX - glissement.x0;
+  const dy = e.clientY - glissement.y0;
+  if (!glissement.actif) {
+    if (Math.hypot(dx, dy) < 6) return;
+    glissement.actif = true;
+    glissement.el.classList.add('glisse');
+  }
+  glissement.el.style.transform = `translate(${dx}px, ${dy}px)`;
+  effacerReperes();
+  const cible = document
+    .elementFromPoint(e.clientX, e.clientY)
+    ?.closest<HTMLElement>('.mesure[data-i]');
+  if (!cible) return;
+  const r = cible.getBoundingClientRect();
+  const apres = e.clientX > r.left + r.width / 2;
+  glissement.vers = Number(cible.dataset.i) + (apres ? 1 : 0);
+  cible.classList.add(apres ? 'cible-apres' : 'cible-avant');
+});
+
+$('#grille').addEventListener('pointerup', finirGlissement);
+$('#grille').addEventListener('pointercancel', finirGlissement);
 
 // ── Son ────────────────────────────────────────────────────────────────────
 
@@ -403,6 +475,7 @@ document
   .forEach((b) => b.addEventListener('click', () => changerMode(b.dataset.mode as Mode)));
 
 $('#grille').addEventListener('click', (e) => {
+  if (vientDeGlisser) return;
   const mesure = (e.target as HTMLElement).closest<HTMLElement>('.mesure');
   if (!mesure || mesure.classList.contains('blanche')) return;
   if (mesure.id === 'ajout') {

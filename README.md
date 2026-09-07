@@ -10,7 +10,8 @@ Site : <https://grille-accords.pages.dev>
 
 - **La grille.** Quatre mesures par ligne, comme sur une grille papier, avec
   barres de reprise quand la boucle est active. Un clic sur un accord de la
-  tonalité l'ajoute, un clic sur une mesure la retire. Seize mesures au plus.
+  tonalité l'ajoute, un clic sur une mesure la retire, et on glisse une mesure
+  pour la déplacer, à la souris comme au doigt. Seize mesures au plus.
 - **La tonalité.** Douze toniques, majeur ou mineur. Changer de tonique
   transpose la grille ; passer de majeur à mineur garde les degrés et change
   les qualités (I–V–vi–IV devient i–v–VI–iv).

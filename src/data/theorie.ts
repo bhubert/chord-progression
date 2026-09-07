@@ -176,6 +176,19 @@ export function basculerSeptiemes(grille: readonly Accord[]): Accord[] {
   });
 }
 
+/**
+ * Déplace l'élément `de` pour l'insérer à la position `vers`, comptée dans la
+ * liste d'origine (0 = tout au début, longueur = tout à la fin). C'est le
+ * glisser-déposer d'une mesure dans la grille.
+ */
+export function deplacer<T>(liste: readonly T[], de: number, vers: number): T[] {
+  const copie = [...liste];
+  const [element] = copie.splice(de, 1);
+  if (element === undefined) return copie;
+  copie.splice(vers > de ? vers - 1 : vers, 0, element);
+  return copie;
+}
+
 // ── Adresse ────────────────────────────────────────────────────────────────
 //
 // `#sol-majeur/I-V-vi-IV`. Lisible, sans caractère à encoder : le ° s'écrit

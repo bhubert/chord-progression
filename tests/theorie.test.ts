@@ -4,6 +4,7 @@ import {
   adresse,
   basculerSeptiemes,
   chiffre,
+  deplacer,
   diatoniques,
   lireAdresse,
   nomAccord,
@@ -124,4 +125,15 @@ test('le chiffrage classique met tout en majuscules, l’adresse garde la casse'
   assert.equal(chiffre({ rel: 10, q: 'maj' }, 'maj', 'majuscules'), 'bVII');
   assert.equal(chiffre({ rel: 7, q: 'dom7' }, 'maj', 'majuscules'), 'V7');
   assert.equal(adresse(SOL, pop), '#sol-majeur/I-V-vi-IV');
+});
+
+test('déplacer une mesure : vers une position comptée dans la grille d’origine', () => {
+  const g = ['a', 'b', 'c', 'd'];
+  assert.deepEqual(deplacer(g, 0, 4), ['b', 'c', 'd', 'a'], 'la première tout à la fin');
+  assert.deepEqual(deplacer(g, 3, 0), ['d', 'a', 'b', 'c'], 'la dernière tout au début');
+  assert.deepEqual(deplacer(g, 1, 3), ['a', 'c', 'b', 'd'], 'b après c');
+  assert.deepEqual(deplacer(g, 2, 1), ['a', 'c', 'b', 'd'], 'c avant b');
+  assert.deepEqual(deplacer(g, 1, 1), g, 'à sa place');
+  assert.deepEqual(deplacer(g, 1, 2), g, 'juste après elle-même : rien ne bouge');
+  assert.deepEqual(deplacer(g, 9, 0), g, 'index inconnu : rien ne bouge');
 });

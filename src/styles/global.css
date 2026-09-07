@@ -285,6 +285,35 @@ a {
 .mesure:nth-child(4n) {
   border-right: 0;
 }
+/* Glisser-déposer : la mesure saisie suit le pointeur, un repère doré marque la place. */
+.mesure[data-i] {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.mesure.glisse {
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.92;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  cursor: grabbing;
+}
+.mesure.cible-avant::after,
+.mesure.cible-apres::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--laiton);
+}
+.mesure.cible-avant::after {
+  left: -2px;
+}
+.mesure.cible-apres::after {
+  right: -2px;
+}
 .mesure:hover {
   background: var(--bois-2);
 }
