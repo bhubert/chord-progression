@@ -115,9 +115,10 @@ dans `tsconfig.json`), et aucun accès au DOM dans `theorie.ts`, `positions.ts`,
   Le script pose `sans-transition` sur `<html>` le temps du changement, sinon
   les fonds `color-mix` glissent visiblement d'un thème à l'autre.
 - **Une couleur par forme CAGED**, cinq variables `--caged-*`. C rouge, A
-  jaune, G vert, E bleu, D violet : un choix, pas une norme (FaChords alterne
-  rouge et bleu, Triads & CAGED met C en bleu). Tout passe par ces variables,
-  y compris le SVG du manche. Pas de badge de forme sur les diagrammes de
+  bleu, G turquoise, E vert, D orange : la charte que l'utilisateur connaît,
+  fournie en image le 7 septembre 2026. Tout passe par ces variables, y
+  compris le SVG du manche. Une forme est tracée par une polyligne de corde
+  en corde ; la fondamentale est un point évidé marqué R. Pas de badge de forme sur les diagrammes de
   positions : il chevauchait les cordes à vide et l'utilisateur n'en voulait
   pas là. `lettreCaged` reste, testée, pour le jour où ça servira ailleurs.
 - **Aucune dépendance côté navigateur.** Web Audio et SVG maison. Le script

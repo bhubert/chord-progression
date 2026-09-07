@@ -27,8 +27,11 @@ Site : <https://grille-accords.pages.dev>
 - **Le manche.** Pour un accord de la grille, toutes ses racines sur quinze
   cases, et les cinq formes du CAGED (Do, La, Sol, Mi, Ré) avec, pour chacune,
   la corde et la case où poser la première racine. Cliquer une forme la dessine
-  sur le manche, cercle cette première racine et la fait sonner. Chaque point
-  de la forme dit ce qu'il joue : R, 3, 5, et b3, b5 ou b7 selon la qualité. En mineur,
+  sur le manche, la trace de corde en corde, cercle cette première racine et
+  la fait sonner. Chaque point de la forme dit ce qu'il joue : R sur un point
+  évidé, 3, 5, et b3, b5 ou b7 selon la qualité. « Les cinq formes » dessine
+  la carte complète, chaque forme tracée à sa place sur une zone de sa
+  couleur, y compris une octave plus haut quand elle tient sur le manche. En mineur,
   trois formes ; pour un diminué, les racines seulement. La pentatonique,
   majeure ou mineure, se dessine par-dessus avec ses cinq notes nommées : on
   voit la boîte que chaque forme découpe, et la relative qui partage les
@@ -148,10 +151,10 @@ request vers `main` (contrôles sans déploiement).
   d'un accord (mineur bleu, diminué mauve, septième orange, jusqu'au liseré
   de chaque mesure), l'ambiance d'une progression (filtres et étiquettes),
   la forme CAGED.
-- **Une couleur par forme CAGED**, la même partout : boutons du manche et
-  forme dessinée. C rouge, A jaune, G vert,
-  E bleu, D violet, l'arc-en-ciel dans l'ordre des formes. Il n'existe pas de
-  norme ; pour en suivre une autre, changer les cinq variables `--caged-*`.
+- **Une couleur par forme CAGED**, la même partout : boutons du manche,
+  forme tracée, zones de la carte. C rouge, A bleu, G turquoise, E vert, D
+  orange, la charte des méthodes courantes. Pour en suivre une autre, changer
+  les cinq variables `--caged-*`.
 - **Polices auto-hébergées.** Gloock pour les titres, Barlow pour l'interface,
   Barlow Semi Condensed pour les symboles d'accords. Sous-ensemble latin,
   112 ko en tout, licence OFL. Rien ne vient d'un CDN : la CSP l'interdit.
